@@ -5,8 +5,10 @@ import ToolCallTrace from './ToolCallTrace';
 import { useLanguage } from '../context/LanguageContext';
 import MapCard from './MapCard';
 import ChartCard from './ChartCard';
+import ReportCard from './ReportCard';
 import { extractMapSpec } from '../services/mapSpec';
 import { extractChartSpecs } from '../services/chartSpec';
+import { extractReportImages } from '../services/reportSpec';
 
 const sourceLabel = (doc, i) => {
   const meta = doc?.metadata || {};
@@ -47,6 +49,7 @@ export default function ResponseCard({ data, onOpenSource, onOpenDetails }) {
   // live-trace polling of the next query), otherwise MapCard rebuilds the map.
   const mapSpec = useMemo(() => extractMapSpec(data), [data]);
   const chartSpecs = useMemo(() => extractChartSpecs(data), [data]);
+  const reportSpecs = useMemo(() => extractReportImages(data), [data]);
 
   return (
     <div className="animate-slide-up space-y-2.5 max-w-[640px]">
@@ -64,6 +67,9 @@ export default function ResponseCard({ data, onOpenSource, onOpenDetails }) {
 
       {/* Interactive charts, when the agent called render_chart */}
       {chartSpecs.map((spec, i) => <ChartCard key={i} spec={spec} />)}
+
+      {/* Live VA report snapshots, when the agent rendered a dashboard */}
+      {reportSpecs.map((spec, i) => <ReportCard key={i} spec={spec} />)}
 
       {/* Retrieved context — click to view the passage */}
       {data.context && data.context.length > 0 && (

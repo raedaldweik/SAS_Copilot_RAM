@@ -9,13 +9,14 @@ from __future__ import annotations
 import io
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 import sasviya.config as viya_config
 import sasvi.config as vi_config
 import websearch.config as web_config
 from agents import registry
-from services import runner, store
+from services import images, runner, store
 
 router = APIRouter(prefix="/api", tags=["agents"])
 
@@ -171,3 +172,14 @@ async def query_trace(query_id: str):
     if not q:
         raise HTTPException(status_code=404, detail="Unknown query.")
     return q.trace
+
+
+# ─── Rendered Visual Analytics report snapshots ──────────────────────
+@router.get("/va/image/{image_id}")
+async def va_image(image_id: str):
+    item = images.get(image_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Image expired or unknown.")
+    data, content_type = item
+    return Response(content=data, media_type=content_type,
+                    headers={"Cache-Control": "private, max-age=21600"})

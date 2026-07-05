@@ -49,6 +49,9 @@ const STR = {
 
   toolCallsHeader: { en: 'Agent tool calls · {n} step{s}', ar: 'استدعاءات أدوات الوكيل · {n} خطوة' },
 
+  openInVA: { en: 'Open in SAS Visual Analytics ↗', ar: 'فتح في SAS Visual Analytics ↗' },
+  clickToZoom: { en: 'Click to enlarge', ar: 'انقر للتكبير' },
+
   queryDetails: { en: 'Query details', ar: 'تفاصيل الاستعلام' },
   loadingTrace: { en: 'loading trace…', ar: 'جارٍ تحميل الأثر…' },
   inputPrompt: { en: 'Input prompt', ar: 'نص السؤال' },

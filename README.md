@@ -32,6 +32,48 @@ to Arabic (RTL layout, Arabic labels, Arabic voice input) and tells the
 agents to answer in Modern Standard Arabic — and back again. The choice is
 remembered per browser.
 
+## Dashboards (SAS Visual Analytics)
+
+The SAS Viya Copilot (and its `dashboard_designer` specialist) speaks the VA
+REST APIs — the OpenAPI specs are vendored in [`docs/va-api/`](docs/va-api/)
+with an endpoint inventory in
+[`docs/va-api/ENDPOINTS.md`](docs/va-api/ENDPOINTS.md).
+
+**Show & analyze** — *"Show me the procurement dashboard and analyze it"*:
+the agent finds the report (`list_va_reports`), renders a live snapshot
+server-side (`render_report` → SVG/PNG, displayed as a card in the chat with
+zoom + an "Open in SAS Visual Analytics" link), then reads the data behind
+the key objects (`get_report_object_data`) and analyzes the actual numbers.
+`export_report_pdf` produces a downloadable PDF.
+
+**Create from a template** — `create_report_from_template` copies a styled
+template report and re-binds its visuals to a real CAS table via the
+report-transforms data-mapping API, saves it as a new report, renders the
+result in chat, and recommends enhancements (KPIs to add, better chart
+choices).
+
+### Building the template (one-time, in VA)
+
+The data-mapping transform swaps one data source for another, so the
+template's objects must be **bound to a placeholder table** (not truly
+empty). Recommended recipe:
+
+1. Load a tiny placeholder table, e.g. `Public.DASH_TEMPLATE_DATA` with
+   generic columns: `CATEGORY` (char), `SUBCATEGORY` (char), `DATE_VAL`
+   (date), `MEASURE1`–`MEASURE4` (numeric). A few dummy rows are enough.
+   (You can ask the copilot's data engineer to generate it.)
+2. In VA, build your styled dashboard on that table — background design,
+   NCGR branding, and ~4 objects, e.g. a KPI (`MEASURE1`), bar
+   (`CATEGORY` × `MEASURE1`), line (`DATE_VAL` × `MEASURE2`), donut
+   (`SUBCATEGORY` × `MEASURE3`).
+3. Save it as e.g. **"NCGR Dashboard Template"** in `/Public`.
+
+Then in chat: *"Create a procurement dashboard from the template using
+Public.PROC_KPIS — map CATEGORY to entity, MEASURE1 to award_value…"* — the
+agent checks the columns, proposes the mapping, creates the report, and
+shows it. Chart types come from the template; the agent picks the data,
+titles, and tells you what to add next.
+
 ## Architecture
 
 ```

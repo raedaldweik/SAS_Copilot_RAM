@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from sasviya.tools import viya
+from sasva.tools import va
 from sasvi.tools import vi
 from websearch.tools import web, sasdocs
 from usecase.tools import procurement
@@ -87,6 +88,14 @@ SPECIALISTS = {
         system=prompts.PLATFORM_GUIDE,
         toolsets=[(sasdocs, None)],
         max_iters=8),
+    "dashboard_designer": AgentDef(
+        id="dashboard_designer", name="Dashboard Designer",
+        description="Finds, renders, analyzes, and creates Visual Analytics dashboards; recommends KPIs and layout improvements.",
+        system=prompts.DASHBOARD_DESIGNER,
+        toolsets=[(va, None),
+                  (viya, ["list_castables", "get_castable_columns",
+                          "get_castable_data", "query_table"])],
+        max_iters=12),
 }
 
 
@@ -100,7 +109,7 @@ AGENTS: dict[str, AgentDef] = {
                     "build models with AutoML, and score in real time, with a team "
                     "of specialist agents.",
         system=prompts.SAS_COPILOT,
-        toolsets=[(viya, None), (charts, None)],
+        toolsets=[(viya, None), (va, None), (charts, None)],
         specialists=SPECIALISTS,
         max_iters=16),
     "vi-investigator": AgentDef(
