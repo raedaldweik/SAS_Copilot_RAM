@@ -96,6 +96,17 @@ class SASLogonAuth:
                     headers={"Content-Type": "application/x-www-form-urlencoded"},
                     data=data,
                 )
+                # Public clients differ by deployment: some SAS Logon setups
+                # want client_id in the body with no Basic header (sas-mcp
+                # style), others (e.g. sas.cli on RACE images) expect the
+                # empty-secret Basic form. Try the other shape once on 401.
+                if resp.status_code == 401 and not self.client_secret:
+                    resp = await client.post(
+                        f"{self.endpoint}/SASLogon/oauth/token",
+                        auth=(self.client_id, ""),
+                        headers={"Content-Type": "application/x-www-form-urlencoded"},
+                        data=grant,
+                    )
             if resp.status_code >= 400:
                 raise AuthenticationError(
                     f"{self.label} sign-in failed ({resp.status_code}): "

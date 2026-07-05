@@ -34,7 +34,7 @@ const markdownComponents = {
   code: ({node, inline, ...props}) => inline
     ? <code className="px-1 py-0.5 rounded text-[12px]" style={{ background: 'rgba(11,110,79,0.08)', color: 'var(--gold)' }} {...props} />
     : <code className="block p-2 rounded my-1 text-[12px] overflow-x-auto" style={{ background: 'rgba(0,0,0,0.04)' }} {...props} />,
-  blockquote: ({node, ...props}) => <blockquote className="pl-3 my-2 italic" style={{ borderLeft: '2px solid var(--gold-lo)', color: 'var(--text-md)' }} {...props} />,
+  blockquote: ({node, ...props}) => <blockquote className="pl-3 my-2 italic" style={{ borderInlineStart: '2px solid var(--gold-lo)', color: 'var(--text-md)' }} {...props} />,
 };
 
 /** Renders one normalized agent response: answer, sources, tool calls, usage. */

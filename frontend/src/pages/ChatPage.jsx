@@ -202,7 +202,7 @@ export default function ChatPage() {
                           : 'hover:bg-[rgba(11,110,79,0.05)] border border-transparent'
                       }`}
                       style={chat.id === activeChatId
-                        ? { color: 'var(--gold-lo)', background: 'rgba(11,110,79,0.14)', border: '1px solid rgba(11,110,79,0.30)', borderLeft: '3px solid var(--gold)' }
+                        ? { color: 'var(--gold-lo)', background: 'rgba(11,110,79,0.14)', border: '1px solid rgba(11,110,79,0.30)', borderInlineStart: '3px solid var(--gold)' }
                         : { color: 'var(--text-md)' }
                       }>
                       <span className="text-sm">💬</span>

@@ -67,7 +67,7 @@ backend/   FastAPI
    |---|---|
    | `ANTHROPIC_API_KEY` | The LLM. Only hard requirement to boot. |
    | `VIYA_ENDPOINT` + `VIYA_REFRESH_TOKEN` (or `VIYA_USERNAME`/`VIYA_PASSWORD`) | SAS Viya Copilot |
-   | `VI_ENDPOINT` + `VI_REFRESH_TOKEN` (or `VI_USERNAME`/`VI_PASSWORD`) | Investigation Assistant |
+   | `VI_ENDPOINT` + `VI_USERNAME`/`VI_PASSWORD` + `VI_CLIENT_ID=sas.cli` (or `VI_REFRESH_TOKEN` for SSO identities) | Investigation Assistant |
    | `TAVILY_API_KEY` | Global Intelligence + the copilot's platform-guide specialist |
 
    Useful optional ones: `SSL_VERIFY=false` / `VI_SSL_VERIFY=false` for

@@ -28,7 +28,7 @@ export default function TargetSelector({ agents, collections, target, onChange, 
         return (
           <button key={item.id} onClick={() => pick({ ...item, type })}
             className="w-full text-left px-3 py-2 transition-all hover:bg-[rgba(11,110,79,0.06)]"
-            style={isActive ? { background: 'rgba(11,110,79,0.10)', borderLeft: '3px solid var(--gold)' } : { borderLeft: '3px solid transparent' }}>
+            style={isActive ? { background: 'rgba(11,110,79,0.10)', borderInlineStart: '3px solid var(--gold)' } : { borderInlineStart: '3px solid transparent' }}>
             <p className="text-[12px] font-semibold truncate" style={{ color: isActive ? 'var(--gold-lo)' : 'var(--text)' }}>{item.name}</p>
             {item.description && (
               <p className="text-[10.5px] truncate" style={{ color: 'var(--text-dim)' }}>{item.description}</p>

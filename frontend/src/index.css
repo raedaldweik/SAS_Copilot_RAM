@@ -170,11 +170,11 @@ html, body {
 .lockup-names { display: flex; flex-direction: column; gap: 0.25cqw; min-width: 0; }
 .lockup-name-en {
   font-size: 1.15cqw; font-weight: 700; color: var(--text);
-  line-height: 1.3; max-width: 21cqw;
+  line-height: 1.3; max-width: 21cqw; text-align: start;
 }
 .lockup-name-ar {
   font-size: 1.05cqw; font-weight: 600; color: var(--gold-lo);
-  line-height: 1.3; text-align: left;
+  line-height: 1.3; text-align: start;
 }
 .org-logo {
   height: 6cqw; width: auto; object-fit: contain; display: block;
@@ -464,6 +464,28 @@ html, body {
 [dir="rtl"] textarea {
   font-family: 'IBM Plex Sans Arabic', 'Manrope', 'Segoe UI', Tahoma, sans-serif;
 }
-[dir="rtl"] .app-title { letter-spacing: 0; }
+[dir="rtl"] .app-title {
+  letter-spacing: 0;
+  font-family: 'IBM Plex Sans Arabic', 'Manrope', sans-serif;
+  font-weight: 600;
+}
+/* In Arabic mode the ARABIC org name leads the lockup; English drops beneath */
+[dir="rtl"] .lockup-name-ar {
+  order: 1; font-size: 1.2cqw; font-weight: 700; color: var(--text);
+  max-width: 23cqw;
+}
+[dir="rtl"] .lockup-name-en {
+  order: 2; font-size: 0.9cqw; font-weight: 600; color: var(--gold-lo);
+}
+/* Mirror the header accent line so it fades away from the title in RTL */
+[dir="rtl"] .accent-line {
+  background: linear-gradient(270deg, var(--gold-hi) 0%, var(--gold) 50%, rgba(11,110,79,0.4) 80%, transparent 100%);
+}
+/* Panel titles: green marker bar sits on the reading side */
+[dir="rtl"] .panel-title {
+  padding-left: 0; padding-right: 8px;
+  border-left: none; border-right: 2px solid var(--gold);
+  box-shadow: 1px 0 0 rgba(11,110,79,0.15);
+}
 /* keep code, traces and identifiers left-to-right inside the Arabic UI */
 [dir="rtl"] pre, [dir="rtl"] code, [dir="rtl"] .font-mono { direction: ltr; text-align: left; }

@@ -3,7 +3,7 @@
 // query so the agents answer in Arabic too.
 
 const STR = {
-  appTitle: { en: 'NCGR Agentic AI Copilot', ar: 'مساعد NCGR للذكاء الاصطناعي الوكيل' },
+  appTitle: { en: 'NCGR Agentic AI Copilot', ar: 'مُعين — المساعد الذكي الوكيل' },
   connecting: { en: 'Connecting…', ar: 'جارٍ الاتصال…' },
   connected: { en: 'Connected', ar: 'متصل' },
   notConfigured: { en: 'Not configured', ar: 'غير مُهيّأ' },
@@ -18,7 +18,7 @@ const STR = {
 
   welcome: {
     en: 'Welcome to the NCGR Agentic AI Copilot. Pick an agent from the dropdown above — the SAS Viya Copilot, the Investigation Assistant, the Procurement Integrity Analyst, or Global Intelligence — and ask away.',
-    ar: 'مرحباً بك في مساعد NCGR للذكاء الاصطناعي الوكيل. اختر وكيلاً من القائمة أعلاه — مساعد SAS Viya، مساعد التحقيقات، محلّل نزاهة المشتريات، أو الاستخبارات العالمية — واسأل ما تشاء.',
+    ar: 'مرحباً بك في «مُعين»، المساعد الذكي الوكيل للمركز الوطني لنظم الموارد الحكومية. اختر وكيلاً من القائمة أعلاه — مساعد SAS Viya، مساعد التحقيقات، محلّل نزاهة المشتريات، أو الاستخبارات العالمية — واسأل ما تشاء.',
   },
 
   selectAgent: { en: 'Select an agent', ar: 'اختر وكيلاً' },
