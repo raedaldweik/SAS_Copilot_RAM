@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 const fmt = (v) => {
   if (v == null) return '';
@@ -8,6 +9,7 @@ const fmt = (v) => {
 
 /** Collapsible trace of the tool calls the agent made while answering. */
 export default function ToolCallTrace({ toolCalls }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   if (!toolCalls || toolCalls.length === 0) return null;
 
@@ -18,7 +20,7 @@ export default function ToolCallTrace({ toolCalls }) {
           <circle cx="12" cy="12" r="9" />
           <path d="M12 7v5l3 3" />
         </svg>
-        <span>Agent tool calls · {toolCalls.length} step{toolCalls.length !== 1 ? 's' : ''}</span>
+        <span>{t('toolCallsHeader', { n: toolCalls.length, s: toolCalls.length !== 1 ? 's' : '' })}</span>
         <div className="flex-1" />
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
           style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>

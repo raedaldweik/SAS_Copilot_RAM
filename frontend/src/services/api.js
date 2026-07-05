@@ -36,7 +36,7 @@ export const getSessionQueries = (sessionId) =>
 // attachments: [{ name, text }] — extracted documents inlined into the query
 // Returns { queryId, querySessionId, pollInterval, timeout, result? } —
 // poll getQueryStatus until done unless `result` came back inline.
-export const submitQuery = (content, target, querySessionId = null, attachments = null) =>
+export const submitQuery = (content, target, querySessionId = null, attachments = null, language = 'en') =>
   req('/api/query', {
     method: 'POST',
     body: JSON.stringify({
@@ -45,6 +45,7 @@ export const submitQuery = (content, target, querySessionId = null, attachments 
       collectionIds: target.type === 'collection' ? [target.id] : null,
       querySessionId,
       attachments,
+      language,
     }),
   });
 

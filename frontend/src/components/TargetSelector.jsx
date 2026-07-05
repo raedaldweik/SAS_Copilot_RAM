@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 /**
  * Dropdown to pick which agent the chat talks to,
  * with optional extra target groups.
  */
 export default function TargetSelector({ agents, collections, target, onChange, loading, error }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   const all = [
@@ -49,10 +51,10 @@ export default function TargetSelector({ agents, collections, target, onChange, 
         <span className="w-2 h-2 rounded-full shrink-0"
           style={{ background: error ? 'var(--red)' : selected ? 'var(--green)' : 'var(--amber)' }} />
         <span className="flex-1 text-left truncate">
-          {loading ? 'Connecting…'
-            : error ? 'Service unreachable'
+          {loading ? t('connecting')
+            : error ? t('serviceUnreachable')
             : selected ? selected.name
-            : 'Select an agent'}
+            : t('selectAgent')}
         </span>
         {selected && (
           <span className="text-[8.5px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded shrink-0"
@@ -75,12 +77,12 @@ export default function TargetSelector({ agents, collections, target, onChange, 
               <p className="px-3 py-3 text-[11.5px]" style={{ color: 'var(--red)' }}>{error}</p>
             ) : all.length === 0 ? (
               <p className="px-3 py-3 text-[11.5px]" style={{ color: 'var(--text-dim)' }}>
-                No agents available on this deployment.
+                {t('noAgents')}
               </p>
             ) : (
               <div className="pb-1.5">
-                <Group label="Agents" items={agents} type="agent" />
-                <Group label="Collections" items={collections} type="collection" />
+                <Group label={t('agents')} items={agents} type="agent" />
+                <Group label={t('collections')} items={collections} type="collection" />
               </div>
             )}
           </div>

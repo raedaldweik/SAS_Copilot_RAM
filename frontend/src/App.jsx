@@ -1,9 +1,11 @@
 import { ChatProvider } from './context/ChatContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Header from './components/Header';
 import ChatPage from './pages/ChatPage';
 
 export default function App() {
   return (
+    <LanguageProvider>
     <ChatProvider>
       <div className="app-shell">
         {/* Atmospheric bokeh — same layer as the dashboards */}
@@ -36,5 +38,6 @@ export default function App() {
         </div>
       </div>
     </ChatProvider>
+    </LanguageProvider>
   );
 }

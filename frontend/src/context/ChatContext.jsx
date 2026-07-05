@@ -3,11 +3,8 @@ import { getSessions, getSessionQueries } from '../services/api';
 
 const ChatContext = createContext();
 
-const WELCOME = {
-  role: 'assistant',
-  type: 'text',
-  content: "Welcome to the NCGR Agentic AI Copilot. Pick an agent from the dropdown above — the SAS Viya Copilot, the Investigation Assistant, the Procurement Integrity Analyst, or Global Intelligence — and ask away.",
-};
+// Rendered via the i18n layer (type 'welcome') so it follows the UI language
+const WELCOME = { role: 'assistant', type: 'welcome' };
 const id = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 const NEW_TITLE = 'New conversation';

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getQueryTrace } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const fmt = (v) => {
   if (v == null) return '';
@@ -55,6 +56,7 @@ const Pill = ({ children }) => (
  *  and token usage — pulled from the backend's trace for this query
  */
 export default function QueryDetails({ data, query, onClose, onOpenSource }) {
+  const { t } = useLanguage();
   const [trace, setTrace] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -86,8 +88,8 @@ export default function QueryDetails({ data, query, onClose, onOpenSource }) {
               <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
               <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
             </svg>
-            <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>Query details</span>
-            {loading && <span className="text-[10.5px] animate-pulse" style={{ color: 'var(--text-dim)' }}>loading trace…</span>}
+            <span className="text-sm font-bold" style={{ color: 'var(--text)' }}>{t('queryDetails')}</span>
+            {loading && <span className="text-[10.5px] animate-pulse" style={{ color: 'var(--text-dim)' }}>{t('loadingTrace')}</span>}
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[rgba(11,110,79,0.08)]" style={{ color: 'var(--text-dim)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -100,22 +102,22 @@ export default function QueryDetails({ data, query, onClose, onOpenSource }) {
 
           {/* Question */}
           <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(11,110,79,0.05)', border: '1px solid rgba(11,110,79,0.14)' }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-dim)' }}>Input prompt</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-dim)' }}>{t('inputPrompt')}</p>
             <p className="text-[12.5px] leading-relaxed" style={{ color: 'var(--text)' }}>{query || data.content || '(unknown)'}</p>
           </div>
 
           {/* Usage summary */}
           <div className="flex flex-wrap gap-2">
             {data.target && <Pill>target: {data.target}</Pill>}
-            {usage.llmTotalTokens != null && <Pill>{usage.llmTotalTokens.toLocaleString()} tokens</Pill>}
+            {usage.llmTotalTokens != null && <Pill>{usage.llmTotalTokens.toLocaleString()} {t('tokens')}</Pill>}
             {usage.llmPromptTokens != null && <Pill>{usage.llmPromptTokens.toLocaleString()} prompt / {usage.llmCompletionTokens?.toLocaleString() ?? 0} completion</Pill>}
             {usage.llmTotalCost != null && <Pill>${Number(usage.llmTotalCost).toFixed(4)}</Pill>}
             {data.queryId && <Pill>query {String(data.queryId).slice(0, 8)}…</Pill>}
           </div>
 
           {/* Tool calls */}
-          <Section title="Tool calls" count={toolCalls.length} defaultOpen={toolCalls.length > 0}>
-            {toolCalls.length === 0 && <p className="text-[11.5px]" style={{ color: 'var(--text-dim)' }}>No tool calls recorded for this query.</p>}
+          <Section title={t('toolCallsSection')} count={toolCalls.length} defaultOpen={toolCalls.length > 0}>
+            {toolCalls.length === 0 && <p className="text-[11.5px]" style={{ color: 'var(--text-dim)' }}>{t('noToolCalls')}</p>}
             {toolCalls.map((c, i) => (
               <div key={c.id || i} className="rounded-lg px-3 py-2.5 space-y-2" style={{ border: '1px solid rgba(11,110,79,0.10)' }}>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -125,26 +127,26 @@ export default function QueryDetails({ data, query, onClose, onOpenSource }) {
                   {c.output?.isError && <Pill>error</Pill>}
                   {c.cost != null && c.cost > 0 && <Pill>${Number(c.cost).toFixed(4)}</Pill>}
                 </div>
-                <Mono label="Input" value={c.input} />
-                <Mono label="Output" value={c.output?.structuredContent ?? c.output?.content ?? c.output} />
+                <Mono label={t('inputLabel')} value={c.input} />
+                <Mono label={t('outputLabel')} value={c.output?.structuredContent ?? c.output?.content ?? c.output} />
               </div>
             ))}
           </Section>
 
           {/* Retrieval (RAG) calls */}
-          <Section title="Retrieval calls (RAG)" count={retrievalCalls.length}>
-            {retrievalCalls.length === 0 && <p className="text-[11.5px]" style={{ color: 'var(--text-dim)' }}>No retrieval calls recorded for this query.</p>}
+          <Section title={t('retrievalSection')} count={retrievalCalls.length}>
+            {retrievalCalls.length === 0 && <p className="text-[11.5px]" style={{ color: 'var(--text-dim)' }}>{t('noRetrieval')}</p>}
             {retrievalCalls.map((c, i) => (
               <div key={c.id || i} className="rounded-lg px-3 py-2.5 space-y-2" style={{ border: '1px solid rgba(11,110,79,0.10)' }}>
-                <Mono label="Input" value={c.input} />
-                <Mono label="Output" value={c.output} />
+                <Mono label={t('inputLabel')} value={c.input} />
+                <Mono label={t('outputLabel')} value={c.output} />
               </div>
             ))}
           </Section>
 
           {/* LLM calls */}
-          <Section title="LLM calls" count={llmCalls.length}>
-            {llmCalls.length === 0 && <p className="text-[11.5px]" style={{ color: 'var(--text-dim)' }}>No LLM calls recorded for this query.</p>}
+          <Section title={t('llmSection')} count={llmCalls.length}>
+            {llmCalls.length === 0 && <p className="text-[11.5px]" style={{ color: 'var(--text-dim)' }}>{t('noLlm')}</p>}
             {llmCalls.map((c, i) => (
               <div key={c.id || i} className="rounded-lg px-3 py-2.5 space-y-2" style={{ border: '1px solid rgba(11,110,79,0.10)' }}>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -160,15 +162,15 @@ export default function QueryDetails({ data, query, onClose, onOpenSource }) {
                     <Pill>${(Number(c.promptCost || 0) + Number(c.completionCost || 0)).toFixed(4)}</Pill>
                   )}
                 </div>
-                <Mono label="Prompt" value={c.input?.content} />
-                <Mono label="Response" value={c.output?.response} />
+                <Mono label={t('promptLabel')} value={c.input?.content} />
+                <Mono label={t('responseLabel')} value={c.output?.response} />
               </div>
             ))}
           </Section>
 
           {/* Retrieved passages */}
-          <Section title="Retrieved context" count={context.length}>
-            {context.length === 0 && <p className="text-[11.5px]" style={{ color: 'var(--text-dim)' }}>No context passages attached to this answer.</p>}
+          <Section title={t('contextSection')} count={context.length}>
+            {context.length === 0 && <p className="text-[11.5px]" style={{ color: 'var(--text-dim)' }}>{t('noContext')}</p>}
             {context.map((doc, i) => {
               const meta = doc?.metadata || {};
               const label = meta.filename || meta.source || meta.file_name || meta.title || `Source ${i + 1}`;
@@ -179,7 +181,7 @@ export default function QueryDetails({ data, query, onClose, onOpenSource }) {
                     {meta.page != null && <Pill>p. {meta.page}</Pill>}
                     {onOpenSource && (
                       <button onClick={() => onOpenSource(doc)} className="text-[10.5px] font-semibold hover:underline ml-auto shrink-0"
-                        style={{ color: 'var(--gold)' }}>open ↗</button>
+                        style={{ color: 'var(--gold)' }}>{t('open')}</button>
                     )}
                   </div>
                   <p className="text-[11.5px] leading-[1.7] whitespace-pre-wrap max-h-[140px] overflow-y-auto" style={{ color: 'var(--text-md)' }}>

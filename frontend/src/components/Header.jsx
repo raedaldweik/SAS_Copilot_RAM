@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { getHealth } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Header() {
   const [health, setHealth] = useState(null);
+  const { t, toggle, lang } = useLanguage();
 
   useEffect(() => {
     getHealth().then(setHealth).catch(() => setHealth({ status: 'down' }));
@@ -12,7 +14,7 @@ export default function Header() {
 
   return (
     <header className="app-header">
-      {/* NCGR lockup — left */}
+      {/* NCGR lockup — start side */}
       <div className="header-lockup">
         <img className="gov-logo" src="/ncgr-logo.png" alt="NCGR"
           onError={e => { e.target.style.display = 'none'; }} />
@@ -25,24 +27,33 @@ export default function Header() {
       {/* Title + green accent line */}
       <div className="title-block">
         <div className="title-row">
-          <h1 className="app-title">NCGR Agentic AI Copilot</h1>
+          <h1 className="app-title">{t('appTitle')}</h1>
           <div className="accent-line" />
         </div>
       </div>
 
-      {/* Connection status + NCGR logo — right */}
+      {/* Language toggle + connection status + NCGR logo — end side */}
       <div className="flex items-center gap-3">
+        <button onClick={toggle}
+          title={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+          className="px-3.5 py-1.5 rounded-full text-[11.5px] font-bold transition-all hover:scale-105"
+          style={{
+            background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(11,110,79,0.30)', color: 'var(--gold-lo)',
+          }}>
+          {t('langButton')}
+        </button>
         <div className="status-pill">
           <span className={`w-2 h-2 rounded-full ${ok ? '' : 'animate-pulse'}`}
             style={{ background: ok ? 'var(--green)' : health ? 'var(--red)' : 'var(--amber)' }} />
           <span>
-            {health == null ? 'Connecting…'
-              : ok ? 'Connected'
-              : health.status === 'unconfigured' ? 'Not configured'
-              : 'Backend offline'}
+            {health == null ? t('connecting')
+              : ok ? t('connected')
+              : health.status === 'unconfigured' ? t('notConfigured')
+              : t('backendOffline')}
           </span>
         </div>
-        {/* NCGR logo — far right */}
+        {/* NCGR logo — far end */}
         <img className="org-logo" src="/ncgr-logo.png" alt="NCGR"
           onError={e => { e.target.style.display = 'none'; }} />
       </div>

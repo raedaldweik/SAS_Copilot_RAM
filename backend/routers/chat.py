@@ -35,6 +35,7 @@ class QueryRequest(BaseModel):
     collectionIds: list[str] | None = None
     querySessionId: str | None = None
     attachments: list[Attachment] | None = None
+    language: str | None = "en"              # UI language — agents answer in it
 
 
 @router.get("/health")
@@ -147,7 +148,8 @@ async def query(body: QueryRequest):
     session = store.get_session(body.querySessionId or "")
     if session is None:
         session = store.create_session(agent.id, body.content)
-    run = store.create_query(session, agent.id, content)
+    lang = "ar" if (body.language or "").lower().startswith("ar") else "en"
+    run = store.create_query(session, agent.id, content, language=lang)
     runner.start(run, agent, session)
     return {"queryId": run.id, "querySessionId": session.id,
             "pollInterval": 2, "timeout": runner.QUERY_TIMEOUT}

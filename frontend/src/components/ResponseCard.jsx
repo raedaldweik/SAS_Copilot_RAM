@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import ToolCallTrace from './ToolCallTrace';
+import { useLanguage } from '../context/LanguageContext';
 import MapCard from './MapCard';
 import ChartCard from './ChartCard';
 import { extractMapSpec } from '../services/mapSpec';
@@ -38,6 +39,7 @@ const markdownComponents = {
 
 /** Renders one normalized agent response: answer, sources, tool calls, usage. */
 export default function ResponseCard({ data, onOpenSource, onOpenDetails }) {
+  const { t } = useLanguage();
   if (!data) return null;
   const usage = data.usage || {};
   const hasUsage = usage.llmTotalTokens != null || usage.llmTotalCost != null;
@@ -96,8 +98,8 @@ export default function ResponseCard({ data, onOpenSource, onOpenDetails }) {
         )}
         {hasUsage && (
           <>
-            {usage.llmTotalTokens != null && <span>{usage.llmTotalTokens.toLocaleString()} tokens</span>}
-            {usage.llmPromptTokens != null && <span>{usage.llmPromptTokens.toLocaleString()} prompt · {usage.llmCompletionTokens?.toLocaleString() ?? 0} completion</span>}
+            {usage.llmTotalTokens != null && <span>{usage.llmTotalTokens.toLocaleString()} {t('tokens')}</span>}
+            {usage.llmPromptTokens != null && <span>{t('promptCompletion', { p: usage.llmPromptTokens.toLocaleString(), c: usage.llmCompletionTokens?.toLocaleString() ?? 0 })}</span>}
             {usage.llmTotalCost != null && <span>${Number(usage.llmTotalCost).toFixed(4)}</span>}
           </>
         )}

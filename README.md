@@ -27,6 +27,11 @@ tool/LLM trace per answer (the grid icon under each response). Charts the
 agents emit (`render_chart`) render as interactive SVG cards. Sub-agent steps
 show up in the trace as `specialist › tool`.
 
+**Arabic mode:** the عربي / English button in the header flips the whole UI
+to Arabic (RTL layout, Arabic labels, Arabic voice input) and tells the
+agents to answer in Modern Standard Arabic — and back again. The choice is
+remembered per browser.
+
 ## Architecture
 
 ```

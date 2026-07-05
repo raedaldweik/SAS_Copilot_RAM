@@ -26,6 +26,7 @@ class QueryRun:
     session_id: str
     agent_id: str
     content: str
+    language: str = "en"                     # UI language ("en" | "ar")
     status: str = "running"                  # running | done | error
     result: Optional[dict] = None
     trace: dict = field(default_factory=lambda: {
@@ -69,9 +70,10 @@ def list_sessions() -> list[Session]:
     return sorted(_sessions.values(), key=lambda s: s.created_at, reverse=True)
 
 
-def create_query(session: Session, agent_id: str, content: str) -> QueryRun:
+def create_query(session: Session, agent_id: str, content: str,
+                 language: str = "en") -> QueryRun:
     q = QueryRun(id=_id("q"), session_id=session.id, agent_id=agent_id,
-                 content=content)
+                 content=content, language=language)
     _queries[q.id] = q
     session.query_ids.append(q.id)
     return q

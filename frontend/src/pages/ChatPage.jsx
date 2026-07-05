@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from '../context/ChatContext';
+import { useLanguage } from '../context/LanguageContext';
 import ResponseCard from '../components/ResponseCard';
 import SourceViewer from '../components/SourceViewer';
 import QueryDetails from '../components/QueryDetails';
@@ -20,6 +21,7 @@ function traceSteps(trace) {
 }
 
 export default function ChatPage() {
+  const { t, lang } = useLanguage();
   const { chats, activeChat, activeChatId, setActiveChatId, addMessage, setChatSession, renameChat, deleteChat, createNewChat } = useChat();
   const messages = activeChat?.messages || [];
   const [input, setInput] = useState('');
@@ -86,7 +88,7 @@ export default function ChatPage() {
     const q = (text || input).trim();
     if (!q || loading) return;
     if (!target) {
-      addMessage(activeChatId, { role: 'assistant', type: 'text', content: 'Select an agent from the dropdown first.', isError: true });
+      addMessage(activeChatId, { role: 'assistant', type: 'text', content: t('selectAgentFirst'), isError: true });
       return;
     }
     setInput('');
@@ -98,7 +100,7 @@ export default function ChatPage() {
     setLiveTrace(null);
     try {
       const sub = await submitQuery(q, target, activeChat?.sessionId || null,
-        attached ? [{ name: attached.name, text: attached.text }] : null);
+        attached ? [{ name: attached.name, text: attached.text }] : null, lang);
       if (sub.querySessionId) setChatSession(activeChatId, sub.querySessionId, target);
 
       let res = sub.result;
@@ -121,17 +123,17 @@ export default function ChatPage() {
             // server. Keep polling; give up only after several in a row.
             if (++consecutiveErrors >= 5) throw e;
             if (Date.now() >= deadline)
-              throw new Error(`The agent did not answer within ${sub.timeout || 600}s — the query may still be running on the server.`);
+              throw new Error(t('agentTimeout', { n: sub.timeout || 600 }));
             continue;
           }
           if (st.done) { res = st.result; break; }
           if (Date.now() >= deadline)
-            throw new Error(`The agent did not answer within ${sub.timeout || 600}s — the query may still be running on the server.`);
+            throw new Error(t('agentTimeout', { n: sub.timeout || 600 }));
         }
       }
 
       if (res.errorCode && res.errorCode !== 0) {
-        addMessage(activeChatId, { role: 'assistant', type: 'text', content: `Agent error: ${res.errorText || 'query failed'}`, isError: true });
+        addMessage(activeChatId, { role: 'assistant', type: 'text', content: `${t('agentErrorPrefix')} ${res.errorText || 'query failed'}`, isError: true });
       } else {
         // Pull the final trace — its tool-call *outputs* carry payloads (like the
         // chart specs) that the inline response.toolCalls may omit.
@@ -140,7 +142,7 @@ export default function ChatPage() {
         addMessage(activeChatId, { role: 'assistant', type: 'structured', data: trace ? { ...res, trace } : res, query: q });
       }
     } catch (err) {
-      addMessage(activeChatId, { role: 'assistant', type: 'text', content: `Error: ${err.message}`, isError: true });
+      addMessage(activeChatId, { role: 'assistant', type: 'text', content: `${t('errorPrefix')} ${err.message}`, isError: true });
     }
     setLoading(false);
     setLiveTrace(null);
@@ -176,7 +178,7 @@ export default function ChatPage() {
       {/* Chat history panel (left) — past query sessions + local chats */}
       <div className="w-[260px] shrink-0 glass-card flex flex-col">
         <div className="p-4 border-b border-[rgba(15,23,42,0.07)]">
-          <p className="panel-title">Recent conversations</p>
+          <p className="panel-title">{t('recentConversations')}</p>
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {visibleChats.map(chat => {
@@ -204,7 +206,7 @@ export default function ChatPage() {
                         : { color: 'var(--text-md)' }
                       }>
                       <span className="text-sm">💬</span>
-                      <span className="truncate flex-1">{chat.title}</span>
+                      <span className="truncate flex-1">{chat.title === 'New conversation' ? t('newConversationTitle') : chat.title}</span>
                     </button>
                     <button onClick={e => { e.stopPropagation(); setChatMenu(menuOpen ? null : chat.id); }}
                       className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-[rgba(11,110,79,0.1)] transition-all shrink-0 ml-0.5"
@@ -221,10 +223,10 @@ export default function ChatPage() {
                     <div className="absolute right-0 top-full mt-0.5 rounded-xl shadow-xl overflow-hidden z-50 min-w-[130px] animate-fade-up"
                       style={{ background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(11,110,79,0.2)', backdropFilter: 'blur(20px)' }}>
                       <button onClick={() => startRename(chat)} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] hover:bg-[rgba(11,110,79,0.05)]" style={{ color: 'var(--text-md)' }}>
-                        Rename
+                        {t('rename')}
                       </button>
                       <button onClick={() => { deleteChat(chat.id); setChatMenu(null); }} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] hover:bg-[var(--red-bg)]" style={{ color: 'var(--red)' }}>
-                        Delete
+                        {t('delete')}
                       </button>
                     </div>
                   </>
@@ -237,7 +239,7 @@ export default function ChatPage() {
           <button onClick={() => { createNewChat(); }}
             className="w-full py-2.5 rounded-lg text-xs font-bold transition-all"
             style={{ border: '2px dashed rgba(11,110,79,0.35)', color: 'var(--gold)', background: 'rgba(11,110,79,0.03)' }}>
-            + New conversation
+            {t('newConversation')}
           </button>
         </div>
       </div>
@@ -250,7 +252,7 @@ export default function ChatPage() {
         <div className="flex items-center justify-between px-6 py-3 border-b border-[rgba(15,23,42,0.07)] relative z-[5]">
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-[3px] h-4 rounded shrink-0" style={{ background: 'var(--gold-grad)' }} />
-            <span className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{activeChat?.title || 'New conversation'}</span>
+            <span className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{(activeChat?.title && activeChat.title !== 'New conversation') ? activeChat.title : t('newConversationTitle')}</span>
           </div>
           <TargetSelector agents={agents} collections={collections} target={target}
             onChange={setTarget} loading={targetsLoading} error={targetsError} />
@@ -291,7 +293,7 @@ export default function ChatPage() {
                         {msg.attachmentName}
                       </div>
                     )}
-                    {msg.content}
+                    {msg.type === 'welcome' ? t('welcome') : msg.content}
                   </div>
                 )}
               </div>
@@ -331,7 +333,7 @@ export default function ChatPage() {
                     </div>
                     {steps.length > 0 && (
                       <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
-                        {steps.length} step{steps.length !== 1 ? 's' : ''} so far
+                        {t('stepsSoFar', { n: steps.length, s: steps.length !== 1 ? 's' : '' })}
                       </span>
                     )}
                   </div>
@@ -355,7 +357,7 @@ export default function ChatPage() {
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11.5px]"
                 style={{ background: 'rgba(11,110,79,0.07)', border: '1px solid rgba(11,110,79,0.20)', color: 'var(--text-dim)' }}>
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--gold)' }} />
-                Reading document…
+                {t('readingDocument')}
               </div>
             ) : (
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold"
@@ -365,8 +367,8 @@ export default function ChatPage() {
                 </svg>
                 {attachment.name}
                 <span className="font-normal" style={{ color: 'var(--text-dim)' }}>
-                  {attachment.truncated ? `first ${Math.round(attachment.text.length / 1000)}k chars` : `${(attachment.chars / 1000).toFixed(1)}k chars`}
-                  {' '}· sent with your next question
+                  {attachment.truncated ? t('firstKChars', { n: Math.round(attachment.text.length / 1000) }) : t('kChars', { n: (attachment.chars / 1000).toFixed(1) })}
+                  {' '}{t('sentWithNext')}
                 </span>
                 <button onClick={() => setAttachment(null)} className="font-bold hover:opacity-70" style={{ color: 'var(--text-dim)' }}>✕</button>
               </div>
@@ -382,7 +384,7 @@ export default function ChatPage() {
             <input ref={fileRef} type="file" className="hidden" onChange={pickFile}
               accept=".pdf,.docx,.txt,.md,.csv,.json,.log,.xml,.html,.yaml,.yml,.sas,.sql,.py" />
             <button onClick={() => fileRef.current?.click()} disabled={attaching}
-              title="Attach a document (PDF, DOCX, TXT, CSV…) — its text is sent with your question"
+              title={t('attachTooltip')}
               className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all hover:bg-[rgba(11,110,79,0.08)] disabled:opacity-40"
               style={{ color: attachment ? 'var(--gold)' : 'var(--text-dim)' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -390,14 +392,14 @@ export default function ChatPage() {
               </svg>
             </button>
 
-            <VoiceInput onTranscript={text => send(text)} disabled={loading} />
+            <VoiceInput onTranscript={text => send(text)} disabled={loading} lang={lang} title={t('speakTooltip')} />
 
             <textarea ref={inputRef} rows="1" value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder={target ? `Ask ${target.name} anything…` : 'Select an agent above, then ask anything…'}
+              placeholder={target ? t('askAnything', { name: target.name }) : t('selectThenAsk')}
               className="flex-1 bg-transparent border-none outline-none text-[13px] py-2 px-2 resize-none leading-relaxed"
-              style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--text)' }} />
+              style={{ fontFamily: 'inherit', color: 'var(--text)' }} />
 
             <button onClick={() => send()}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white shrink-0 hover:scale-105 transition-transform"

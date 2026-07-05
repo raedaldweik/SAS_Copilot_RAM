@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 
-export default function VoiceInput({ onTranscript, disabled }) {
+export default function VoiceInput({ onTranscript, disabled, lang = 'en', title }) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
 
@@ -18,7 +18,7 @@ export default function VoiceInput({ onTranscript, disabled }) {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
+    recognition.lang = lang === 'ar' ? 'ar-SA' : 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -34,13 +34,13 @@ export default function VoiceInput({ onTranscript, disabled }) {
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening, onTranscript]);
+  }, [isListening, onTranscript, lang]);
 
   return (
     <button
       onClick={toggleListening}
       disabled={disabled}
-      title="Speak instead of typing"
+      title={title || "Speak instead of typing"}
       className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${
         isListening
           ? 'bg-red-500/15 text-red-500'

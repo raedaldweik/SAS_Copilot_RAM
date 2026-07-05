@@ -72,6 +72,13 @@ def _jsonable(value: Any) -> Any:
             return str(value)
 
 
+ARABIC_NOTE = (
+    "The user interface is set to Arabic. Always respond in clear Modern "
+    "Standard Arabic (اللغة العربية الفصحى). Keep code, SAS syntax, REST "
+    "paths, table/column names, technical identifiers, and URLs in their "
+    "original form. Chart titles may stay in English when the data keys are "
+    "English. Markdown structure (headings, bold, tables) still applies.")
+
 _DELEGATE_TOOL = "delegate_to_specialist"
 
 
@@ -136,11 +143,15 @@ class AgentRunner:
     # ── LLM call ────────────────────────────────────────────────────
     async def _call_llm(self, system: str, tools: list[dict], messages: list) -> Any:
         client = get_client()
+        system_blocks = [{"type": "text", "text": system,
+                          "cache_control": {"type": "ephemeral"}}]
+        if getattr(self.run, "language", "en") == "ar":
+            # appended AFTER the cached block so the agent-prompt cache still hits
+            system_blocks.append({"type": "text", "text": ARABIC_NOTE})
         async with client.messages.stream(
             model=MODEL,
             max_tokens=MAX_TOKENS,
-            system=[{"type": "text", "text": system,
-                     "cache_control": {"type": "ephemeral"}}],
+            system=system_blocks,
             tools=tools,
             messages=messages,
             output_config={"effort": LLM_EFFORT},
