@@ -30,6 +30,8 @@ class AgentDef:
     toolsets: list = field(default_factory=list)
     specialists: dict = field(default_factory=dict)   # id -> AgentDef
     max_iters: int = 14
+    # starter prompts shown as chips on a fresh conversation, per language
+    suggestions: dict = field(default_factory=dict)   # {"en": [...], "ar": [...]}
 
     def tool_specs(self) -> list[dict]:
         specs = []
@@ -111,7 +113,21 @@ AGENTS: dict[str, AgentDef] = {
         system=prompts.SAS_COPILOT,
         toolsets=[(viya, None), (va, None), (charts, None)],
         specialists=SPECIALISTS,
-        max_iters=16),
+        max_iters=16,
+        suggestions={
+            "en": [
+                "What data do we have? Give me a quick tour of the environment.",
+                "Generate a 5,000-row synthetic dataset for a supplier-risk demo, then profile it.",
+                "Build a model with AutoML on that table and score one record in real time.",
+                "Show me the procurement dashboard and analyze it.",
+            ],
+            "ar": [
+                "ما البيانات المتوفرة لدينا؟ قدّم لي جولة سريعة في البيئة.",
+                "أنشئ بيانات اصطناعية من 5000 صف لعرض مخاطر الموردين ثم حلّلها.",
+                "ابنِ نموذجاً بالتعلّم الآلي على ذلك الجدول واحسب درجة سجل واحد فورياً.",
+                "اعرض لوحة معلومات المشتريات وحلّلها.",
+            ],
+        }),
     "vi-investigator": AgentDef(
         id="vi-investigator",
         name="Investigation Assistant (Visual Investigator)",
@@ -119,7 +135,21 @@ AGENTS: dict[str, AgentDef] = {
                     "queue, explain detections, flag false positives, recommend actions.",
         system=prompts.VI_AGENT,
         toolsets=[(vi, None), (charts, None)],
-        max_iters=14),
+        max_iters=14,
+        suggestions={
+            "en": [
+                "What should I look at first today?",
+                "Triage the highest-priority alert — why did it fire?",
+                "Could this alert be a false positive? Walk me through the evidence.",
+                "Who is connected to this supplier, and through what?",
+            ],
+            "ar": [
+                "بماذا أبدأ اليوم؟",
+                "افرز التنبيه الأعلى أولوية — لماذا انطلق؟",
+                "هل يمكن أن يكون هذا التنبيه إنذاراً كاذباً؟ اشرح لي الأدلة.",
+                "من يرتبط بهذا المورد وبأي روابط؟",
+            ],
+        }),
     "procurement-analyst": AgentDef(
         id="procurement-analyst",
         name="Procurement Integrity Analyst",
@@ -127,7 +157,21 @@ AGENTS: dict[str, AgentDef] = {
                     "suppliers, invoices, red-flag alerts, and ready risk models.",
         system=prompts.PROCUREMENT_AGENT,
         toolsets=[(procurement, None), (charts, None)],
-        max_iters=12),
+        max_iters=12,
+        suggestions={
+            "en": [
+                "Who are our riskiest suppliers right now?",
+                "Run the bid-rigging screen on IT tenders.",
+                "How much are we overpaying versus market prices?",
+                "Any purchases split to stay under the approval threshold?",
+            ],
+            "ar": [
+                "من هم الموردون الأعلى خطورة حالياً؟",
+                "شغّل فحص التواطؤ في عطاءات تقنية المعلومات.",
+                "كم ندفع زيادة عن أسعار السوق؟",
+                "هل هناك مشتريات مجزّأة للبقاء تحت حد الاعتماد؟",
+            ],
+        }),
     "global-intel": AgentDef(
         id="global-intel",
         name="Global Intelligence (Web Search)",
@@ -135,7 +179,21 @@ AGENTS: dict[str, AgentDef] = {
                     "emerging technologies, and trends that matter to NCGR.",
         system=prompts.WEB_AGENT,
         toolsets=[(web, None), (charts, None)],
-        max_iters=12),
+        max_iters=12,
+        suggestions={
+            "en": [
+                "What are other countries doing on AI-driven procurement oversight?",
+                "What changed in agentic AI this month?",
+                "Best practice for supplier risk monitoring — summarize with sources.",
+                "How are governments using AI copilots? Give examples, with sources.",
+            ],
+            "ar": [
+                "ماذا تفعل الدول الأخرى في الرقابة على المشتريات بالذكاء الاصطناعي؟",
+                "ما الجديد في الذكاء الاصطناعي الوكيل هذا الشهر؟",
+                "لخّص أفضل الممارسات في مراقبة مخاطر الموردين مع المصادر.",
+                "كيف تستخدم الحكومات المساعدات الذكية؟ أعطني أمثلة مع المصادر.",
+            ],
+        }),
 }
 
 
@@ -144,5 +202,6 @@ def get_agent(agent_id: str) -> Optional[AgentDef]:
 
 
 def list_agents() -> list[dict]:
-    return [{"id": a.id, "name": a.name, "description": a.description}
+    return [{"id": a.id, "name": a.name, "description": a.description,
+             "suggestions": a.suggestions}
             for a in AGENTS.values()]

@@ -13,6 +13,7 @@ const STR = {
   recentConversations: { en: 'Recent conversations', ar: 'المحادثات الأخيرة' },
   newConversation: { en: '+ New conversation', ar: '+ محادثة جديدة' },
   newConversationTitle: { en: 'New conversation', ar: 'محادثة جديدة' },
+  suggestedPrompts: { en: 'Suggested prompts', ar: 'أسئلة مقترحة' },
   rename: { en: 'Rename', ar: 'إعادة تسمية' },
   delete: { en: 'Delete', ar: 'حذف' },
 

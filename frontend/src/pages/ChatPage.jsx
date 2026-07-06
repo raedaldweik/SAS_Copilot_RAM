@@ -376,6 +376,25 @@ export default function ChatPage() {
           </div>
         )}
 
+        {/* Suggested prompts — fresh conversation only */}
+        {!loading && messages.length <= 1 && (() => {
+          const sugg = (target?.type === 'agent'
+            && agents.find(a => a.id === target.id)?.suggestions?.[lang]) || [];
+          if (!sugg.length) return null;
+          return (
+            <div className="px-5 pb-1 pt-1 relative z-[1]">
+              <p className="text-[9px] tracking-widest uppercase font-bold mb-2 px-1" style={{ color: 'var(--text-dim)' }}>
+                {t('suggestedPrompts')}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {sugg.map((q, i) => (
+                  <button key={i} onClick={() => send(q)} className="suggestion-chip">{q}</button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Input bar */}
         <div className="px-5 pb-4 pt-2 relative z-[1]">
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl border border-[rgba(15,23,42,0.10)] transition-all focus-within:border-[var(--gold-hi)] focus-within:shadow-[0_0_0_3px_rgba(11,110,79,0.10)]"
