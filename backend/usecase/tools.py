@@ -138,3 +138,26 @@ async def run_model(model: str, view: str = "summary",
     if model == "price_anomaly":
         return M.price_anomaly(category, n)
     return {"error": f"unknown model: {model}"}
+
+
+@procurement.add(
+    "deploy_use_case_to_sas",
+    "Push the entire procurement-integrity use case into the connected SAS "
+    "Viya environment as CAS tables: the raw datasets (PROC_SUPPLIERS, "
+    "PROC_TENDERS, PROC_BIDS, PROC_INVOICES, PROC_ALERTS) plus the scored "
+    "model outputs (PROC_SUPPLIER_RISK, PROC_RIG_CLUSTERS, "
+    "PROC_PRICE_ANOMALIES). Repeatable — existing copies are refreshed. "
+    "After this, the data can be queried with CAS SQL, charted in Visual "
+    "Analytics, and used to train models.",
+    {"type": "object",
+     "properties": {
+         "caslib": {"type": "string",
+                    "description": "Target caslib (default Public)"},
+         "server_id": {"type": "string",
+                       "description": "CAS server (default cas-shared-default)"}},
+     "required": []},
+)
+async def deploy_use_case_to_sas(caslib: str = "Public",
+                                 server_id: str = "cas-shared-default"):
+    from .sas_deploy import deploy
+    return await deploy(caslib=caslib, server_id=server_id)
