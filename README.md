@@ -19,7 +19,7 @@ Anthropic Claude and talk to SAS through the **SAS Viya MCP toolset**
 |---|---|---|
 | **SAS Viya Copilot** | Explore the environment, query data, run SAS code, generate data, build models with AutoML, real-time scoring — orchestrating five specialist sub-agents (data steward, data engineer, model builder, insights & reporting, platform guide) | SAS Viya environment via the vendored Viya MCP toolset (`backend/sasviya/`) |
 | **Investigation Assistant** | Alert triage for SAS Visual Investigator: work the queue, explain why alerts fired, gather entity networks, flag false positives, recommend actions | VI environment via `backend/sasvi/` (svi-alert + svi-datahub REST) |
-| **Procurement Integrity Analyst** | A per-use-case agent: tenders, bids, suppliers, invoices & red-flag alerts for Saudi government entities, with ready models (supplier risk, bid-rigging screen, price anomaly) | Two modes: **SAS-connected** — the use case deployed as CAS tables + a VA dashboard on your Viya environment (see below); or **bundled** (`backend/usecase/`) — runs with zero external dependencies |
+| **Procurement Integrity Analyst** | A per-use-case agent: tenders, bids, suppliers, invoices & red-flag alerts for Saudi government entities, with ready models (supplier risk, bid-rigging screen, price anomaly) | Bundled synthetic dataset + models (`backend/usecase/`) — runs with zero external dependencies |
 | **Global Intelligence** | What other countries/agencies are doing, emerging tech, news monitoring with cited sources | Tavily web search (`backend/websearch/`, vendored from `Web_Search`) |
 
 Everything an agent does is visible: live activity while it works, and a full
@@ -73,30 +73,6 @@ Public.PROC_KPIS — map CATEGORY to entity, MEASURE1 to award_value…"* — th
 agent checks the columns, proposes the mapping, creates the report, and
 shows it. Chart types come from the template; the agent picks the data,
 titles, and tells you what to add next.
-
-## Putting the procurement use case ON your SAS environment
-
-The Procurement Integrity Analyst ships with its data and models bundled so
-it always works — but it becomes a real SAS use case in one chat message:
-
-> *"Deploy the procurement use case to my SAS environment."*
-
-The agent's `deploy_use_case_to_sas` tool pushes everything into CAS
-(caslib `Public` by default) and refreshes on re-run:
-
-| CAS table | Contents |
-|---|---|
-| `PROC_SUPPLIERS` / `PROC_TENDERS` / `PROC_BIDS` / `PROC_INVOICES` / `PROC_ALERTS` | The raw datasets (420 / 1,130 / 4,545 / 2,732 / 146 rows) |
-| `PROC_SUPPLIER_RISK` | Scored supplier watchlist (risk score, tier, all signals) |
-| `PROC_RIG_CLUSTERS` | Bid-rigging screen results per entity × category market |
-| `PROC_PRICE_ANOMALIES` | Flagged overpriced items vs category benchmarks |
-
-From then on the agent auto-detects the tables and answers from **CAS SQL**
-instead of the bundle — every figure comes from the platform — and it can
-render the use case's VA dashboard in chat. To finish the story: build a
-**"Procurement Integrity Dashboard"** in Visual Analytics on those tables
-(or map them onto the NCGR template), and ask the SAS Viya Copilot to train
-an AutoML model on `PROC_SUPPLIER_RISK` for real-time scoring.
 
 ## Architecture
 

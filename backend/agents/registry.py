@@ -156,14 +156,8 @@ AGENTS: dict[str, AgentDef] = {
         description="Use-case agent over government procurement data — tenders, "
                     "suppliers, invoices, red-flag alerts, and ready risk models.",
         system=prompts.PROCUREMENT_AGENT,
-        toolsets=[(procurement, None),
-                  (viya, ["query_table", "list_castables",
-                          "get_castable_info", "get_castable_columns"]),
-                  (va, ["list_va_reports", "render_report",
-                        "get_report_overview", "get_report_object_data",
-                        "export_report_pdf"]),
-                  (charts, None)],
-        max_iters=14,
+        toolsets=[(procurement, None), (charts, None)],
+        max_iters=12,
         suggestions={
             "en": [
                 "Who are our riskiest suppliers right now?",
