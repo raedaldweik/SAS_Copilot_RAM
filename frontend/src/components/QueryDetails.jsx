@@ -151,7 +151,7 @@ export default function QueryDetails({ data, query, onClose, onOpenSource }) {
               <div key={c.id || i} className="rounded-lg px-3 py-2.5 space-y-2" style={{ border: '1px solid rgba(11,110,79,0.10)' }}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[12px] font-bold font-mono" style={{ color: 'var(--gold-lo)' }}>
-                    {c.input?.modelName || 'LLM'}
+                    {'LLM'}
                   </span>
                   {c.input?.modelProvider && <Pill>{c.input.modelProvider}</Pill>}
                   {c.input?.temperature != null && <Pill>temp {c.input.temperature}</Pill>}

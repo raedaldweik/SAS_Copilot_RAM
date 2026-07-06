@@ -174,7 +174,9 @@ html, body {
 }
 .lockup-name-ar {
   font-size: 1.05cqw; font-weight: 600; color: var(--gold-lo);
-  line-height: 1.3; text-align: start;
+  /* the span is dir="rtl", so "start" would push it right in the English
+     layout — pin it to the same left edge as the English name above */
+  line-height: 1.3; text-align: left;
 }
 .org-logo {
   height: 6cqw; width: auto; object-fit: contain; display: block;
@@ -472,10 +474,11 @@ html, body {
 /* In Arabic mode the ARABIC org name leads the lockup; English drops beneath */
 [dir="rtl"] .lockup-name-ar {
   order: 1; font-size: 1.2cqw; font-weight: 700; color: var(--text);
-  max-width: 23cqw;
+  max-width: 23cqw; text-align: right;
 }
 [dir="rtl"] .lockup-name-en {
   order: 2; font-size: 0.9cqw; font-weight: 600; color: var(--gold-lo);
+  text-align: right;
 }
 /* Mirror the header accent line so it fades away from the title in RTL */
 [dir="rtl"] .accent-line {

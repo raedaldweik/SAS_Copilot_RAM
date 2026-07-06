@@ -16,7 +16,7 @@ function traceSteps(trace) {
   return [
     ...(trace.toolCalls || []).map(c => ({ key: `t-${c.id}`, icon: '🛠', label: c.toolName || 'tool call' })),
     ...(trace.retrievalCalls || []).map(c => ({ key: `r-${c.id}`, icon: '📚', label: 'retrieving documents' })),
-    ...(trace.llmCalls || []).map(c => ({ key: `l-${c.id}`, icon: '✦', label: c.input?.modelName ? `LLM · ${c.input.modelName}` : 'LLM call' })),
+    ...(trace.llmCalls || []).map(c => ({ key: `l-${c.id}`, icon: '✦', label: 'LLM' })),
   ];
 }
 
