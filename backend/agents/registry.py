@@ -1,4 +1,4 @@
-"""The NCGR agent line-up and the SAS Copilot's specialist sub-agents.
+"""The RTA agent line-up and the SAS Copilot's specialist sub-agents.
 
 Each agent is a system prompt + one or more toolsets (optionally a subset of
 each). The SAS Viya Copilot additionally carries a specialist roster the
@@ -176,7 +176,7 @@ AGENTS: dict[str, AgentDef] = {
         id="global-intel",
         name="Global Intelligence (Web Search)",
         description="Scans news and the web — what other countries are doing, "
-                    "emerging technologies, and trends that matter to NCGR.",
+                    "emerging technologies, and trends that matter to RTA.",
         system=prompts.WEB_AGENT,
         toolsets=[(web, None), (charts, None)],
         max_iters=12,

@@ -24,10 +24,10 @@ procurement = ToolSet("procurement_usecase")
 )
 async def get_use_case():
     return {
-        "useCaseName": "NCGR Procurement Integrity Monitor",
+        "useCaseName": "RTA Procurement Integrity Monitor",
         "description": (
-            "Government procurement oversight for Saudi entities: tenders, "
-            "bids, suppliers, invoices and integrity alerts (amounts in SAR). "
+            "Government procurement oversight for Dubai entities: tenders, "
+            "bids, suppliers, invoices and integrity alerts (amounts in AED). "
             "Includes ready models for supplier risk scoring, bid-rigging "
             "screening, and price-anomaly detection."),
         "datasets": {k: D.describe_dataset(k)

@@ -1,13 +1,12 @@
-# NCGR Agentic AI Copilot
+# RTA Agentic AI Copilot
 
-A multi-agent AI assistant for the National Center for Government Resources
-Systems (NCGR), Saudi Arabia — demonstrating **SAS agentic AI with a
-customer-owned LLM**. The same UI as the NCGR RAM assistant, but with **no
+A multi-agent AI assistant for the Roads and Transport Authority (RTA), Dubai — demonstrating **SAS agentic AI with a
+customer-owned LLM**. The same UI as the RTA RAM assistant, but with **no
 SAS Retrieval Agent Manager dependency**: the agents run in this app against
 Anthropic Claude and talk to SAS through the **SAS Viya MCP toolset**
 (vendored into this repo).
 
-> **The story for NCGR:** SAS Copilot requires SAS-hosted LLMs. This app
+> **The story for RTA:** SAS Copilot requires SAS-hosted LLMs. This app
 > shows the alternative: RAM (or any agent host) + the SAS Viya MCP + the
 > LLM of your choice — here Claude Sonnet 5, swappable for an on-prem model.
 > The tool layer is identical to the `sas-mcp-server` MCP server, so
@@ -19,7 +18,7 @@ Anthropic Claude and talk to SAS through the **SAS Viya MCP toolset**
 |---|---|---|
 | **SAS Viya Copilot** | Explore the environment, query data, run SAS code, generate data, build models with AutoML, real-time scoring — orchestrating five specialist sub-agents (data steward, data engineer, model builder, insights & reporting, platform guide) | SAS Viya environment via the vendored Viya MCP toolset (`backend/sasviya/`) |
 | **Investigation Assistant** | Alert triage for SAS Visual Investigator: work the queue, explain why alerts fired, gather entity networks, flag false positives, recommend actions | VI environment via `backend/sasvi/` (svi-alert + svi-datahub REST) |
-| **Procurement Integrity Analyst** | A per-use-case agent: tenders, bids, suppliers, invoices & red-flag alerts for Saudi government entities, with ready models (supplier risk, bid-rigging screen, price anomaly) | Bundled synthetic dataset + models (`backend/usecase/`) — runs with zero external dependencies |
+| **Procurement Integrity Analyst** | A per-use-case agent: tenders, bids, suppliers, invoices & red-flag alerts for Dubai government entities, with ready models (supplier risk, bid-rigging screen, price anomaly) | Bundled synthetic dataset + models (`backend/usecase/`) — runs with zero external dependencies |
 | **Global Intelligence** | What other countries/agencies are doing, emerging tech, news monitoring with cited sources | Tavily web search (`backend/websearch/`, vendored from `Web_Search`) |
 
 Everything an agent does is visible: live activity while it works, and a full
@@ -63,10 +62,10 @@ empty). Recommended recipe:
    (date), `MEASURE1`–`MEASURE4` (numeric). A few dummy rows are enough.
    (You can ask the copilot's data engineer to generate it.)
 2. In VA, build your styled dashboard on that table — background design,
-   NCGR branding, and ~4 objects, e.g. a KPI (`MEASURE1`), bar
+   RTA branding, and ~4 objects, e.g. a KPI (`MEASURE1`), bar
    (`CATEGORY` × `MEASURE1`), line (`DATE_VAL` × `MEASURE2`), donut
    (`SUBCATEGORY` × `MEASURE3`).
-3. Save it as e.g. **"NCGR Dashboard Template"** in `/Public`.
+3. Save it as e.g. **"RTA Dashboard Template"** in `/Public`.
 
 Then in chat: *"Create a procurement dashboard from the template using
 Public.PROC_KPIS — map CATEGORY to entity, MEASURE1 to award_value…"* — the
@@ -144,7 +143,7 @@ npm install
 npm run dev            # http://localhost:5173, proxies /api to :8000
 ```
 
-## Demo script ideas (NCGR)
+## Demo script ideas (RTA)
 
 * **SAS Viya Copilot** — "Brainstorm a driver-risk dataset for a demo,
   generate 5,000 rows, profile it, then build a model with AutoML and score

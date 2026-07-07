@@ -1,5 +1,5 @@
 """
-NCGR Agentic AI Copilot — FastAPI backend.
+RTA Agentic AI Copilot — FastAPI backend.
 
 Four agents over one chat UI:
   • SAS Viya Copilot          — SAS Viya MCP toolset + specialist sub-agents
@@ -38,7 +38,7 @@ import websearch.config as web_config            # noqa: E402
 from services import runner                      # noqa: E402
 
 app = FastAPI(
-    title="NCGR Agentic AI Copilot",
+    title="RTA Agentic AI Copilot",
     description="Multi-agent assistant over SAS Viya, SAS Visual Investigator, "
                 "a bundled procurement-integrity use case, and web intelligence.",
     version="0.1.0",
@@ -83,7 +83,7 @@ else:
     @app.get("/")
     def root() -> dict:
         return {
-            "service": "NCGR Agentic AI Copilot",
+            "service": "RTA Agentic AI Copilot",
             "status": "operational (dev mode — no frontend build found)",
             "hint": "run 'npm run build' in frontend/ for production, or run "
                     "the Vite dev server on :5173",
