@@ -20,7 +20,6 @@ export default function Header() {
           onError={e => { e.target.style.display = 'none'; }} />
         <div className="lockup-names">
           <span className="lockup-name-en">SAS — Advanced Analytics & AI</span>
-          <span className="lockup-name-ar" dir="rtl">التحليلات المتقدمة والذكاء الاصطناعي</span>
         </div>
       </div>
 
