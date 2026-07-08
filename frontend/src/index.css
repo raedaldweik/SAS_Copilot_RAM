@@ -7,10 +7,10 @@
 :root {
   /* Same token names as the reports chatbot (kept for component compatibility) —
      values re-skinned to the NCGR palette. */
-  --gold: #b91c2c;                 /* NCGR green */
-  --gold-hi: #dc2626;              /* lighter green */
-  --gold-lo: #7f1d1d;              /* deep green */
-  --gold-grad: linear-gradient(135deg, #dc2626, #b91c2c, #7f1d1d);
+  --gold: #0766D1;                 /* NCGR green */
+  --gold-hi: #2E8BE6;              /* lighter green */
+  --gold-lo: #054A99;              /* deep green */
+  --gold-grad: linear-gradient(135deg, #2E8BE6, #0766D1, #054A99);
   --nav-grad: linear-gradient(135deg, #0a1628 0%, #1e293b 45%, #14202f 75%, #243447 100%);
 
   /* Ink ladder — same as the dashboards */
@@ -22,8 +22,8 @@
   --green: #047857;
   --green-bg: rgba(4,120,87,0.10);
   --green-border: rgba(4,120,87,0.25);
-  --red: #b91c2c;
-  --red-bg: rgba(185,28,44,0.09);
+  --red: #0766D1;
+  --red-bg: rgba(7,102,209,0.09);
   --amber: #b45309;
   --amber-bg: rgba(180,83,9,0.10);
   --blue: #0e7490;
@@ -241,14 +241,14 @@ html, body {
   padding-left: 8px;
   border-left: 2px solid var(--gold);
   line-height: 1.25;
-  box-shadow: -1px 0 0 rgba(185,28,44,0.15);
+  box-shadow: -1px 0 0 rgba(7,102,209,0.15);
 }
 
 /* ═══ Header accent line (the reports' .red-line, NCGR green) ═══ */
 .accent-line {
   flex: 1; min-width: 0; height: 1px;
-  background: linear-gradient(90deg, var(--gold-hi) 0%, var(--gold) 50%, rgba(185,28,44,0.4) 80%, transparent 100%);
-  box-shadow: 0 0 6px rgba(185,28,44,0.25);
+  background: linear-gradient(90deg, var(--gold-hi) 0%, var(--gold) 50%, rgba(7,102,209,0.4) 80%, transparent 100%);
+  box-shadow: 0 0 6px rgba(7,102,209,0.25);
 }
 
 /* ═══ Chat Specific ═══ */
@@ -271,8 +271,8 @@ html, body {
 }
 
 .msg-user-bubble {
-  background: linear-gradient(135deg, rgba(185,28,44,0.08), rgba(185,28,44,0.03));
-  border: 1px solid rgba(185,28,44,0.14);
+  background: linear-gradient(135deg, rgba(7,102,209,0.08), rgba(7,102,209,0.03));
+  border: 1px solid rgba(7,102,209,0.14);
   border-radius: 14px;
   border-top-right-radius: 4px;
 }
@@ -294,7 +294,7 @@ html, body {
   color: white;
   border-color: var(--gold);
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(185,28,44,0.25);
+  box-shadow: 0 3px 10px rgba(7,102,209,0.25);
 }
 .suggestion-chip .chip-tag {
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em;
@@ -477,7 +477,7 @@ html, body {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 14px;
   background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(244,248,246,0.75));
-  border: 1px solid rgba(185,28,44,0.18);
+  border: 1px solid rgba(7,102,209,0.18);
   border-radius: 999px;
   font-size: 12px; font-weight: 600;
   color: var(--text-md);
@@ -488,7 +488,7 @@ html, body {
 .suggestion-chip:hover {
   background: var(--gold); color: #fff; border-color: var(--gold);
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(185,28,44,0.28);
+  box-shadow: 0 3px 10px rgba(7,102,209,0.28);
 }
 
 /* In Arabic mode the ARABIC org name leads the lockup; English drops beneath */
@@ -502,13 +502,13 @@ html, body {
 }
 /* Mirror the header accent line so it fades away from the title in RTL */
 [dir="rtl"] .accent-line {
-  background: linear-gradient(270deg, var(--gold-hi) 0%, var(--gold) 50%, rgba(185,28,44,0.4) 80%, transparent 100%);
+  background: linear-gradient(270deg, var(--gold-hi) 0%, var(--gold) 50%, rgba(7,102,209,0.4) 80%, transparent 100%);
 }
 /* Panel titles: green marker bar sits on the reading side */
 [dir="rtl"] .panel-title {
   padding-left: 0; padding-right: 8px;
   border-left: none; border-right: 2px solid var(--gold);
-  box-shadow: 1px 0 0 rgba(185,28,44,0.15);
+  box-shadow: 1px 0 0 rgba(7,102,209,0.15);
 }
 /* keep code, traces and identifiers left-to-right inside the Arabic UI */
 [dir="rtl"] pre, [dir="rtl"] code, [dir="rtl"] .font-mono { direction: ltr; text-align: left; }

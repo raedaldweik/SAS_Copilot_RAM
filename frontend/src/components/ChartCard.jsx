@@ -2,16 +2,16 @@ import { useMemo, useRef, useState } from 'react';
 
 /*
  * ChartCard — renders a `render_chart` spec (kind:"chart") as an interactive,
- * dependency-free SVG chart, themed to match the RTA UI. Supports bar, line,
+ * dependency-free SVG chart, themed to match the SAS UI. Supports bar, line,
  * area, pie and scatter, multiple series, stacking, and hover tooltips.
  *
  * Data source: the `render_chart` MCP tool (SAS use-case server). The tool does
  * no plotting; this component draws the spec.
  */
 
-// RTA-themed categorical palette (mirrors src/index.css tokens).
-const PALETTE = ['#b91c2c', '#0e7490', '#b45309', '#047857', '#7f1d1d',
-                 '#475569', '#dc2626', '#0891b2', '#92400e', '#1e293b'];
+// SAS-themed categorical palette (mirrors src/index.css tokens).
+const PALETTE = ['#0766D1', '#0e7490', '#b45309', '#047857', '#054A99',
+                 '#475569', '#2E8BE6', '#0891b2', '#92400e', '#1e293b'];
 
 const VB_W = 720;
 const VB_H = 380;

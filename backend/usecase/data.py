@@ -1,15 +1,15 @@
 """Bundled procurement-integrity use case — synthetic data layer.
 
-A ready-made RTA-flavored dataset (Dubai government procurement, amounts in
-AED) generated deterministically at first use, with realistic red-flag
+A ready-made SAS-flavored dataset (government procurement, amounts in
+USD) generated deterministically at first use, with realistic red-flag
 patterns planted for the demo:
 
 * a bid-rotation / cover-bidding ring (3 suppliers sharing an owner group)
-  in Traffic & Roads Agency IT tenders,
-* systematic ~40% overpricing by one supplier at the Public Transport Agency,
-* split purchasing under the 200,000 AED direct-award threshold at the
-  Marine Transport Department,
-* a repeated single-bidder winner at the Rail Agency,
+  in Ministry of Education IT tenders,
+* systematic ~40% overpricing by one supplier at the Ministry of Health,
+* split purchasing under the 200,000 USD direct-award threshold at the
+  Ministry of Sports,
+* a repeated single-bidder winner at the Ministry of Transport,
 * duplicate invoices scattered across suppliers.
 
 The same use case can later be loaded into SAS (upload the tables to CAS and
@@ -25,43 +25,43 @@ import numpy as np
 import pandas as pd
 
 SEED = 20260705
-DIRECT_AWARD_THRESHOLD = 200_000  # AED
+DIRECT_AWARD_THRESHOLD = 200_000  # USD
 
 ENTITIES = [
-    "Public Transport Agency", "Traffic & Roads Agency", "Rail Agency",
-    "Licensing Agency", "Dubai Taxi Corporation",
-    "Corporate Technology Support Services", "Strategy & Corporate Governance Sector", "Marine Transport Department",
-    "Smart Mobility Sector", "Commercial & Investment Department",
+    "Ministry of Health", "Ministry of Education", "Ministry of Transport",
+    "Ministry of Interior", "Ministry of Municipal Affairs",
+    "Ministry of Energy", "Ministry of Finance", "Ministry of Sports",
+    "National Data & AI Authority", "Public Works Authority",
 ]
 CATEGORIES = [
-    "IT Equipment", "Software Licenses", "Construction", "Vehicle Spare Parts",
+    "IT Equipment", "Software Licenses", "Construction", "Medical Supplies",
     "Office Supplies", "Consulting Services", "Facility Maintenance",
     "Vehicles", "Security Services", "Training Services",
 ]
-REGIONS = ["Deira", "Bur Dubai", "Al Barsha", "Jumeirah", "Al Quoz", "Dubai Marina", "Al Nahda", "Jebel Ali"]
+REGIONS = ["Central Region", "Northern Region", "Eastern Region", "Western Region", "Southern Region", "Coastal Region", "Highland Region", "Metro Region"]
 
-# category → (typical unit price AED, tender value log-mean)
+# category → (typical unit price USD, tender value log-mean)
 _CAT_PROFILE = {
     "IT Equipment": (4200, 13.2), "Software Licenses": (950, 13.0),
-    "Construction": (1800, 15.2), "Vehicle Spare Parts": (310, 13.6),
+    "Construction": (1800, 15.2), "Medical Supplies": (310, 13.6),
     "Office Supplies": (85, 11.8), "Consulting Services": (1450, 13.4),
     "Facility Maintenance": (240, 12.6), "Vehicles": (98000, 14.3),
     "Security Services": (520, 12.9), "Training Services": (1900, 12.2),
 }
 
 RING = ["S021", "S045", "S078"]          # bid-rotation ring (shared owner group OG-077)
-OVERPRICER = "S103"                       # Public Transport Agency overpricing
-SPLITTER = "S230"                         # Marine Transport Department split purchasing
-SINGLE_BIDDER = "S150"                    # Rail Agency single-bid winner
+OVERPRICER = "S103"                       # Ministry of Health overpricing
+SPLITTER = "S230"                         # Ministry of Sports split purchasing
+SINGLE_BIDDER = "S150"                    # Ministry of Transport single-bid winner
 
 _lock = threading.Lock()
 _D: dict[str, pd.DataFrame] = {}
 
 
 def _gen_supplier_names(rng, n):
-    prefixes = ["Al-Deira", "Al-Noor", "Gulf", "Najd", "Arabian", "Modern",
+    prefixes = ["Apex", "Northstar", "Coastal", "Nexus", "Meridian", "Modern",
                 "United", "National", "Advanced", "Horizon", "Falcon", "Oasis",
-                "Red Sea", "Eastern", "Peninsula", "Crown", "Summit", "Desert Rose"]
+                "Bluewater", "Eastern", "Peninsula", "Crown", "Summit", "Rosewood"]
     suffixes = ["Tech", "Trading", "Contracting", "Medical", "Supplies",
                 "Solutions", "Logistics", "Services", "Industries", "Systems",
                 "Group", "Est."]
@@ -96,15 +96,15 @@ def _build() -> dict[str, pd.DataFrame]:
         suppliers.loc[idx[s], "owner_group"] = "OG-077"
     suppliers.loc[idx["S200"], "owner_group"] = "OG-120"
     suppliers.loc[idx["S201"], "owner_group"] = "OG-120"
-    suppliers.loc[idx["S021"], "supplier_name"] = "Al-Deira Advanced Tech"
-    suppliers.loc[idx["S045"], "supplier_name"] = "Najd Digital Systems"
+    suppliers.loc[idx["S021"], "supplier_name"] = "Apex Advanced Tech"
+    suppliers.loc[idx["S045"], "supplier_name"] = "Nexus Digital Systems"
     suppliers.loc[idx["S078"], "supplier_name"] = "Falcon Information Tech"
-    suppliers.loc[idx[OVERPRICER], "supplier_name"] = "Peninsula Auto Parts Trading"
-    suppliers.loc[idx[SPLITTER], "supplier_name"] = "Summit Marine Supplies"
+    suppliers.loc[idx[OVERPRICER], "supplier_name"] = "Peninsula Medical Trading"
+    suppliers.loc[idx[SPLITTER], "supplier_name"] = "Summit Sports Supplies"
     suppliers.loc[idx[SINGLE_BIDDER], "supplier_name"] = "Eastern Roads Contracting"
     for s in RING:
         suppliers.loc[idx[s], "primary_category"] = "IT Equipment"
-    suppliers.loc[idx[OVERPRICER], "primary_category"] = "Vehicle Spare Parts"
+    suppliers.loc[idx[OVERPRICER], "primary_category"] = "Medical Supplies"
     suppliers.loc[idx[SPLITTER], "primary_category"] = "Office Supplies"
     suppliers.loc[idx[SINGLE_BIDDER], "primary_category"] = "Construction"
 
@@ -155,7 +155,7 @@ def _build() -> dict[str, pd.DataFrame]:
                 amt = min(amt, remaining) if k < n_inv - 1 else remaining
                 remaining -= amt
                 unit = unit_base * float(rng.uniform(0.85, 1.2))
-                if winner_id == OVERPRICER and entity == "Public Transport Agency":
+                if winner_id == OVERPRICER and entity == "Ministry of Health":
                     unit = unit_base * float(rng.uniform(1.35, 1.48))
                 qty = max(1, int(round(amt / unit)))
                 inv_date = award + timedelta(days=int(rng.integers(10, 200)))
@@ -175,7 +175,7 @@ def _build() -> dict[str, pd.DataFrame]:
         k = k or int(rng.integers(3, 8))
         return list(rng.choice(pool, size=min(k, len(pool)), replace=False))
 
-    # ── pattern 1: bid-rotation ring (TRA × IT Equipment) ────────────
+    # ── pattern 1: bid-rotation ring (MoE × IT Equipment) ────────────
     ring_wins = 36
     for i in range(ring_wins):
         publish = start + timedelta(days=int(i * days_span / ring_wins + rng.integers(0, 10)))
@@ -189,14 +189,14 @@ def _build() -> dict[str, pd.DataFrame]:
         if rng.uniform() < 0.4:  # occasional outside bidder priced out
             out = market_bidders("IT Equipment", exclude=RING, k=1)[0]
             bidders.append((out, win_amt * float(rng.uniform(1.10, 1.2))))
-        add_tender("Traffic & Roads Agency", "IT Equipment", "open", publish,
+        add_tender("Ministry of Education", "IT Equipment", "open", publish,
                    submission_days=int(rng.integers(5, 8)), est_value=est,
                    bidders_with_amounts=bidders)
 
-    # ── pattern 2: overpricer wins PTA medical/IT contracts ──────────
+    # ── pattern 2: overpricer wins MoH medical/IT contracts ──────────
     for i in range(14):
         publish = start + timedelta(days=int(rng.integers(0, days_span - 90)))
-        cat = "Vehicle Spare Parts" if i % 3 else "IT Equipment"
+        cat = "Medical Supplies" if i % 3 else "IT Equipment"
         est = float(np.exp(rng.normal(13.5, 0.4)))
         method = "limited" if i % 2 else "direct"
         win_amt = est * float(rng.uniform(0.96, 1.05))
@@ -204,7 +204,7 @@ def _build() -> dict[str, pd.DataFrame]:
         if method == "limited":
             for extra in market_bidders(cat, exclude=[OVERPRICER], k=int(rng.integers(1, 3))):
                 bidders.append((extra, win_amt * float(rng.uniform(1.03, 1.12))))
-        add_tender("Public Transport Agency", cat, method, publish,
+        add_tender("Ministry of Health", cat, method, publish,
                    submission_days=int(rng.integers(10, 25)), est_value=est,
                    bidders_with_amounts=bidders)
 
@@ -215,7 +215,7 @@ def _build() -> dict[str, pd.DataFrame]:
         for j in range(int(rng.integers(3, 5))):
             publish = anchor + timedelta(days=int(rng.integers(0, 10)))
             est = float(rng.uniform(168_000, 199_000))
-            add_tender("Marine Transport Department", "Office Supplies", "direct", publish,
+            add_tender("Ministry of Sports", "Office Supplies", "direct", publish,
                        submission_days=int(rng.integers(3, 8)), est_value=est,
                        bidders_with_amounts=[(SPLITTER, est * float(rng.uniform(0.98, 1.0)))])
 
@@ -223,7 +223,7 @@ def _build() -> dict[str, pd.DataFrame]:
     for i in range(11):
         publish = start + timedelta(days=int(rng.integers(0, days_span - 60)))
         est = float(np.exp(rng.normal(14.6, 0.5)))
-        add_tender("Rail Agency", "Construction", "limited", publish,
+        add_tender("Ministry of Transport", "Construction", "limited", publish,
                    submission_days=int(rng.integers(7, 15)), est_value=est,
                    bidders_with_amounts=[(SINGLE_BIDDER, est * float(rng.uniform(0.97, 1.03)))])
 
@@ -283,7 +283,7 @@ def _build() -> dict[str, pd.DataFrame]:
                                      p=[.38, .3, .17, .15])),
         })
 
-    ring_t = tenders_df[(tenders_df.entity == "Traffic & Roads Agency")
+    ring_t = tenders_df[(tenders_df.entity == "Ministry of Education")
                         & (tenders_df.category == "IT Equipment")
                         & (tenders_df.winning_supplier_id.isin(RING))]
     for _, t in ring_t.iterrows():
@@ -294,20 +294,20 @@ def _build() -> dict[str, pd.DataFrame]:
                   "short submission window.", t.award_date or t.publish_date)
 
     over_inv = invoices_df[(invoices_df.supplier_id == OVERPRICER)
-                           & (invoices_df.entity == "Public Transport Agency")]
+                           & (invoices_df.entity == "Ministry of Health")]
     for _, v in over_inv.sample(n=min(20, len(over_inv)), random_state=3).iterrows():
         add_alert("Price anomaly", "high", rng.uniform(70, 92), v.entity,
                   v.supplier_id, v.tender_id,
-                  f"Unit price {v.unit_price:,.0f} AED is ~40% above the category "
+                  f"Unit price {v.unit_price:,.0f} USD is ~40% above the category "
                   f"benchmark for {v.category}.", v.invoice_date)
 
-    split_t = tenders_df[(tenders_df.entity == "Marine Transport Department")
+    split_t = tenders_df[(tenders_df.entity == "Ministry of Sports")
                          & (tenders_df.winning_supplier_id == SPLITTER)]
     for _, t in split_t.iterrows():
         add_alert("Split purchasing", "medium", rng.uniform(55, 80), t.entity,
                   t.winning_supplier_id, t.tender_id,
-                  f"Direct award of {t.winning_bid:,.0f} AED sits just below the "
-                  f"{DIRECT_AWARD_THRESHOLD:,.0f} AED threshold, clustered with "
+                  f"Direct award of {t.winning_bid:,.0f} USD sits just below the "
+                  f"{DIRECT_AWARD_THRESHOLD:,.0f} USD threshold, clustered with "
                   f"similar awards to the same supplier within days.",
                   t.award_date or t.publish_date)
 
@@ -322,7 +322,7 @@ def _build() -> dict[str, pd.DataFrame]:
     for d in dups:
         add_alert("Duplicate invoice", "high", rng.uniform(65, 90), d["entity"],
                   d["supplier_id"], d["tender_id"],
-                  f"Invoice amount {d['amount']:,.0f} AED duplicates an earlier "
+                  f"Invoice amount {d['amount']:,.0f} USD duplicates an earlier "
                   f"invoice from the same supplier within days.", d["invoice_date"])
 
     # benign noise alerts (false-positive fodder for triage demos)

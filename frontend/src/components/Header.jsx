@@ -14,13 +14,13 @@ export default function Header() {
 
   return (
     <header className="app-header">
-      {/* RTA lockup — start side */}
+      {/* brand lockup — start side */}
       <div className="header-lockup">
-        <img className="gov-logo" src="/rta-logo.png" alt="RTA"
+        <img className="gov-logo" src="/sas-logo.png" alt="SAS"
           onError={e => { e.target.style.display = 'none'; }} />
         <div className="lockup-names">
-          <span className="lockup-name-en">Roads and Transport Authority</span>
-          <span className="lockup-name-ar" dir="rtl">هيئة الطرق والمواصلات</span>
+          <span className="lockup-name-en">SAS — Advanced Analytics & AI</span>
+          <span className="lockup-name-ar" dir="rtl">التحليلات المتقدمة والذكاء الاصطناعي</span>
         </div>
       </div>
 
@@ -32,14 +32,14 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Language toggle + connection status + RTA logo — end side */}
+      {/* Language toggle + connection status + SAS logo — end side */}
       <div className="flex items-center gap-3">
         <button onClick={toggle}
           title={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
           className="px-3.5 py-1.5 rounded-full text-[11.5px] font-bold transition-all hover:scale-105"
           style={{
             background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(185,28,44,0.30)', color: 'var(--gold-lo)',
+            border: '1px solid rgba(7,102,209,0.30)', color: 'var(--gold-lo)',
           }}>
           {t('langButton')}
         </button>
@@ -53,8 +53,8 @@ export default function Header() {
               : t('backendOffline')}
           </span>
         </div>
-        {/* RTA logo — far end */}
-        <img className="org-logo" src="/rta-logo.png" alt="RTA"
+        {/* SAS logo — far end */}
+        <img className="org-logo" src="/sas-logo.png" alt="SAS"
           onError={e => { e.target.style.display = 'none'; }} />
       </div>
     </header>
