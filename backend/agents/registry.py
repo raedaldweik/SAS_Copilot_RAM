@@ -15,6 +15,7 @@ from sasva.tools import va
 from sasvi.tools import vi
 from websearch.tools import web, sasdocs
 from usecase.tools import procurement
+from frontline.tools import frontline
 from toolset import ToolSet, charts
 
 from . import prompts
@@ -195,6 +196,79 @@ AGENTS: dict[str, AgentDef] = {
             ],
         }),
 }
+
+
+# ── Frontline Assist (social benefits) ──────────────────────────────
+
+_INTEGRATIONS = ["get_beneficiary_profile", "check_icp", "check_mohre",
+                 "check_gpssa", "check_card_status", "check_utility"]
+
+FRONTLINE_SPECIALISTS = {
+    "knowledge_decision": AgentDef(
+        id="knowledge_decision", name="Knowledge & Decision AI Agent",
+        description="Analytical backbone — verifies facts across the integrations and runs the deterministic Smart Form engine; evidence-based reports.",
+        system=prompts.KNOWLEDGE_DECISION,
+        toolsets=[(frontline, _INTEGRATIONS + ["evaluate_complaint"])],
+        max_iters=10),
+    "document_processing": AgentDef(
+        id="document_processing", name="Document Processing AI Agent",
+        description="Shared document service — submits uploads to the existing document-intelligence module (IDP) and consumes confidence scores, extracted fields, and rejection reasons.",
+        system=prompts.DOCUMENT_PROCESSING,
+        toolsets=[(frontline, ["submit_document_to_idp"])],
+        max_iters=6),
+}
+
+AGENTS["customer-resolution"] = AgentDef(
+    id="customer-resolution",
+    name="Customer Resolution Agent",
+    description="Frontline Assist — resolves Inflation Allowance and SWP "
+                "complaints end to end: real-time integration checks, a "
+                "deterministic Smart Form decision engine (eight outcomes), "
+                "and an AI-document fallback when systems are unavailable.",
+    system=prompts.CUSTOMER_RESOLUTION,
+    toolsets=[(frontline, None), (charts, None)],
+    specialists=FRONTLINE_SPECIALISTS,
+    max_iters=14,
+    suggestions={
+        "en": [
+            "I didn't receive my Inflation Allowance this month. My Emirates ID is 784-1990-7654321-3.",
+            "My payment card never arrived — ID 784-1978-1122334-5.",
+            "Why was my application rejected? ID 784-1995-4455667-8.",
+            "The allowance amount looks wrong this month — ID 784-1969-9988776-1.",
+        ],
+        "ar": [
+            "لم أستلم علاوة التضخم هذا الشهر. رقم هويتي 784-1990-7654321-3.",
+            "بطاقة الدفع لم تصلني — الهوية 784-1978-1122334-5.",
+            "لماذا رُفض طلبي؟ الهوية 784-1995-4455667-8.",
+            "مبلغ العلاوة يبدو خاطئاً هذا الشهر — الهوية 784-1969-9988776-1.",
+        ],
+    })
+
+AGENTS["case-management"] = AgentDef(
+    id="case-management",
+    name="Case Management Agent",
+    description="Supervisor view over the Frontline Assist case queue — SLA "
+                "breaches, case timelines with the full inter-agent audit "
+                "trail, and queue analytics.",
+    system=prompts.CASE_MANAGEMENT,
+    toolsets=[(frontline, ["list_cases", "get_case_timeline",
+                           "get_beneficiary_profile"]),
+              (charts, None)],
+    specialists=FRONTLINE_SPECIALISTS,
+    max_iters=12,
+    suggestions={
+        "en": [
+            "What's in the case queue today? Anything breaching SLA?",
+            "Show me the full timeline for case FA-2026-0142.",
+            "Chart open cases by outcome and status.",
+        ],
+        "ar": [
+            "ما الموجود في قائمة الحالات اليوم؟ هل هناك تجاوز لاتفاقية مستوى الخدمة؟",
+            "اعرض السجل الكامل للحالة FA-2026-0142.",
+            "ارسم الحالات المفتوحة حسب النتيجة والحالة.",
+        ],
+    })
+
 
 
 def get_agent(agent_id: str) -> Optional[AgentDef]:
