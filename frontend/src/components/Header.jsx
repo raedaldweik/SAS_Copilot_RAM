@@ -18,9 +18,6 @@ export default function Header() {
       <div className="header-lockup">
         <img className="gov-logo" src="/sas-logo.png" alt="SAS"
           onError={e => { e.target.style.display = 'none'; }} />
-        <div className="lockup-names">
-          <span className="lockup-name-en">SAS — Advanced Analytics & AI</span>
-        </div>
       </div>
 
       {/* Title + green accent line */}
