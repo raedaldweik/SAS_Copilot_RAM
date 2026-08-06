@@ -33,6 +33,7 @@ logging.basicConfig(level=logging.INFO,
 
 from routers import chat as chat_router          # noqa: E402
 import sasviya.config as viya_config             # noqa: E402
+import sasviya.tools as viya_tools               # noqa: E402
 import sasvi.config as vi_config                 # noqa: E402
 import websearch.config as web_config            # noqa: E402
 from services import runner                      # noqa: E402
@@ -55,8 +56,16 @@ app.add_middleware(
 
 app.include_router(chat_router.router)
 
+
+@app.on_event("shutdown")
+async def _shutdown_viya_bridge():
+    """Close the in-memory MCP session and any warm Viya compute sessions."""
+    await viya_tools.viya.shutdown()
+
 print(f"✓ LLM: {runner.MODEL} ({'key set' if runner.llm_configured() else 'ANTHROPIC_API_KEY MISSING'})")
-print(f"✓ SAS Viya: {viya_config.VIYA_ENDPOINT or '(not configured)'}")
+print(f"✓ SAS Viya: {viya_config.VIYA_ENDPOINT or '(not configured)'} — "
+      f"official SAS Viya MCP Server, {len(viya_tools.viya.tool_names)} tools "
+      f"(tiers {viya_tools.MCP_TIERS})")
 print(f"✓ Visual Investigator: {vi_config.VI_ENDPOINT or '(not configured)'}")
 print(f"✓ Tavily web search: {'key set' if web_config.configured() else '(not configured)'}")
 

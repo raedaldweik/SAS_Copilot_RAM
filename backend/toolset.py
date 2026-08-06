@@ -6,9 +6,11 @@ or more toolsets (optionally a subset of the tools in each); the runner merges
 the specs into the `tools` parameter of the Messages API call and dispatches
 `tool_use` blocks back to the registered functions.
 
-The tool names, descriptions, and behaviors mirror the MCP servers this repo
-vendors (sas-mcp-server, the Web_Search news server, and the planned VI
-server) — they run in-process here so the whole app ships as one container.
+The SAS Viya toolset is special: it is the official SAS Viya MCP Server
+itself, vendored under backend/sas_mcp_server/ and bridged through an
+in-memory MCP client session (see sasviya/tools.py — its MCPToolSet class
+duck-types this ToolSet protocol). The other toolsets are in-process
+implementations, so the whole app still ships as one container.
 """
 from __future__ import annotations
 

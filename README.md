@@ -3,20 +3,22 @@
 A multi-agent AI assistant for the any organization — SAS-branded demo edition — demonstrating **SAS agentic AI with a
 customer-owned LLM**. The same UI as the SAS RAM assistant, but with **no
 SAS Retrieval Agent Manager dependency**: the agents run in this app against
-Anthropic Claude and talk to SAS through the **SAS Viya MCP toolset**
-(vendored into this repo).
+Anthropic Claude and talk to SAS through the **official SAS Viya MCP
+Server** (`sas-mcp-server` v1.7.0, vendored verbatim under
+`backend/sas_mcp_server/` and bridged in-process over MCP).
 
 > **The story for SAS:** SAS Copilot requires SAS-hosted LLMs. This app
 > shows the alternative: RAM (or any agent host) + the SAS Viya MCP + the
 > LLM of your choice — here Claude Sonnet 5, swappable for an on-prem model.
-> The tool layer is identical to the `sas-mcp-server` MCP server, so
-> everything demonstrated here transfers 1:1 to a RAM + MCP deployment.
+> The tool layer IS the official `sas-mcp-server` (the copilot talks to it
+> through a real MCP client session), so everything demonstrated here
+> transfers 1:1 to a RAM + MCP deployment.
 
 ## The four agents (dropdown in the UI)
 
 | Agent | What it does | Backed by |
 |---|---|---|
-| **SAS Viya Copilot** | Explore the environment, query data, run SAS code, generate data, build models with AutoML, real-time scoring — orchestrating five specialist sub-agents (data steward, data engineer, model builder, insights & reporting, platform guide) | SAS Viya environment via the vendored Viya MCP toolset (`backend/sasviya/`) |
+| **SAS Viya Copilot** | Explore the environment, query data, run SAS code, generate data, build models with AutoML, real-time scoring — orchestrating five specialist sub-agents (data steward, data engineer, model builder, insights & reporting, platform guide) | SAS Viya environment via the **official SAS Viya MCP Server** (`backend/sas_mcp_server/`, bridged by `backend/sasviya/`) |
 | **Investigation Assistant** | Alert triage for SAS Visual Investigator: work the queue, explain why alerts fired, gather entity networks, flag false positives, recommend actions | VI environment via `backend/sasvi/` (svi-alert + svi-datahub REST) |
 | **Procurement Integrity Analyst** | A per-use-case agent: tenders, bids, suppliers, invoices & red-flag alerts for government entities, with ready models (supplier risk, bid-rigging screen, price anomaly) | Bundled synthetic dataset + models (`backend/usecase/`) — runs with zero external dependencies |
 | **Global Intelligence** | What other countries/agencies are doing, emerging tech, news monitoring with cited sources | Tavily web search (`backend/websearch/`, vendored from `Web_Search`) |
@@ -80,7 +82,9 @@ frontend/  React + Vite + Tailwind (copied from Finance_RAM_UI, RAM plumbing rem
 backend/   FastAPI
   ├─ agents/      agent definitions + system prompts (registry.py, prompts.py)
   ├─ services/    the agentic loop (runner.py) + in-memory sessions (store.py)
-  ├─ sasviya/     SAS Viya toolset  — vendored from sas-mcp-server (Apache-2.0)
+  ├─ sas_mcp_server/  the official SAS Viya MCP Server, vendored verbatim (Apache-2.0)
+  ├─ sasviya/     bridge: official MCP tools → agent runner (in-memory MCP client)
+  ├─ sasva/       Visual Analytics dashboard toolset (in-chat report snapshots)
   ├─ sasvi/       SAS Visual Investigator toolset (implements the SAS_VI_MCP roadmap)
   ├─ websearch/   Tavily tools      — vendored from Web_Search
   ├─ usecase/     bundled procurement-integrity data + models
@@ -89,10 +93,14 @@ backend/   FastAPI
 
 * The LLM is **Claude Sonnet 5** (`MODEL` env var to change) driving a
   standard tool-use loop with streaming and prompt caching.
-* The MCP servers are vendored **in-process** — same tool names, arguments,
-  and behavior as `sas-mcp-server`, without MCP transport overhead, so the
-  whole app ships as **one container**. Swapping back to real MCP servers
-  (e.g. under RAM) is a wiring change, not a rewrite.
+* The SAS Viya Copilot's tools come from the **official `sas-mcp-server`**,
+  registered on an in-process FastMCP instance and called through a real
+  in-memory MCP client session — actual MCP tools, schemas, and error
+  semantics, with the whole app still shipping as **one container**.
+  `MCP_TIERS` selects which official tool tiers the copilot gets
+  (default `0-2,4-6`: compute, discovery, data ops, jobs, AutoML, scoring).
+  Pointing the bridge at an external MCP server (e.g. under RAM) is a
+  wiring change, not a rewrite.
 * Queries run async: `POST /api/query` → poll `GET /api/query/{id}` with the
   live trace at `GET /api/query/{id}/trace` (this avoids gateway timeouts on
   long agent runs — same pattern as the RAM UI).
@@ -162,8 +170,12 @@ npm run dev            # http://localhost:5173, proxies /api to :8000
 
 ## Vendored code & licenses
 
-`backend/sasviya/` and parts of `backend/saslogon.py` are adapted from
-[sas-mcp-server](https://github.com/raedaldweik/sas-mcp-server) and its
-use-case variant (© 2025 SAS Institute Inc., Apache-2.0 — headers retained).
-`backend/websearch/` is adapted from the Web_Search news MCP server.
-`backend/sasvi/` implements the scope planned in the SAS_VI_MCP roadmap.
+`backend/sas_mcp_server/` is the **official SAS Viya MCP Server** v1.7.0,
+vendored verbatim from
+[sas-mcp-server](https://github.com/raedaldweik/sas-mcp-server)
+(© 2025–2026 SAS Institute Inc., Apache-2.0 — LICENSE and headers retained;
+see `backend/sas_mcp_server/VENDORED.md` for the exact commit and update
+instructions). Parts of `backend/saslogon.py` are adapted from the same
+project's headless auth path. `backend/websearch/` is adapted from the
+Web_Search news MCP server. `backend/sasvi/` implements the scope planned
+in the SAS_VI_MCP roadmap.
