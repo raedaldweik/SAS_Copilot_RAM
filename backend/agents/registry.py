@@ -11,9 +11,8 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from sasviya.tools import viya
-from sasva.tools import va
 from sasvi.tools import vi
-from websearch.tools import web, sasdocs
+from websearch.tools import web
 from usecase.tools import procurement
 from frontline.tools import frontline
 from toolset import ToolSet, charts
@@ -48,93 +47,154 @@ class AgentDef:
         return None
 
 
-# ── SAS Copilot specialists ─────────────────────────────────────────
-# Tool subsets name tools from the official SAS Viya MCP Server (the
-# in-process bridge in sasviya/tools.py) — see backend/sas_mcp_server/.
+# ── SAS Viya Copilot: the official MCP's 9 tiers as an agent team ───
+# Every tool below is one of the official SAS Viya MCP Server's 74 tools
+# (tiers 0-7, bridged in-process by sasviya/tools.py — see
+# backend/sas_mcp_server/). No custom tools: the copilot is a multi-agent
+# harness over the official server, nothing more. Each specialist owns
+# the tiers of one stage of the analytics lifecycle (plus the discovery
+# tools it needs for grounding); together they cover all 74.
 
-_DISCOVERY = ["list_cas_servers", "list_caslibs", "list_castables",
-              "get_castable_info", "get_castable_columns", "get_castable_data"]
+_CAS_GROUNDING = ["list_caslibs", "list_castables", "get_castable_info",
+                  "get_castable_columns", "get_castable_data"]
 
 SPECIALISTS = {
-    "data_steward": AgentDef(
-        id="data_steward", name="Data Steward",
-        description="Inventories and profiles data, assesses quality, explains variable relationships.",
-        system=prompts.DATA_STEWARD,
-        toolsets=[(viya, _DISCOVERY + ["execute_sas_code", "catalog_search",
-                                       "catalog_download_table_profile",
-                                       "list_files"])],
-        max_iters=10),
+    "sas_programmer": AgentDef(
+        id="sas_programmer", name="SAS Programmer",
+        description="Writes and runs SAS code in compute sessions (Tier 0) and manages "
+                    "long-running batch jobs (Tier 4) — data steps, PROCs, SQL, job logs.",
+        system=prompts.SAS_PROGRAMMER,
+        toolsets=[(viya, ["execute_sas_code", "list_compute_contexts",
+                          "reset_compute_session",
+                          "submit_batch_job", "get_job_status", "get_job_log",
+                          "list_jobs", "cancel_job",
+                          "list_compute_libraries", "list_compute_tables",
+                          "list_compute_columns"])],
+        max_iters=12),
+    "data_explorer": AgentDef(
+        id="data_explorer", name="Data Explorer",
+        description="Owns Data Discovery (Tier 1): the Information Catalog (search, "
+                    "profiles, catalog agents), CAS and compute metadata, and deep "
+                    "column-level data profiling.",
+        system=prompts.DATA_EXPLORER,
+        toolsets=[(viya, ["catalog_search", "catalog_search_helper",
+                          "catalog_find_instance", "catalog_list_agents",
+                          "catalog_get_agent_history", "catalog_run_agent",
+                          "catalog_run_adhoc_analysis", "catalog_get_adhoc_analysis",
+                          "catalog_download_table_profile",
+                          "list_compute_libraries", "list_compute_tables",
+                          "list_compute_columns", "list_cas_servers",
+                          "list_source_tables", "execute_sas_code"]
+                         + _CAS_GROUNDING)],
+        max_iters=12),
     "data_engineer": AgentDef(
         id="data_engineer", name="Data Engineer",
-        description="Generates synthetic data, uploads and prepares tables with SAS code.",
+        description="Owns Data Operations & Files (Tier 2): uploads CSV/Excel/inline "
+                    "data, manages files, loads and promotes CAS tables, prepares and "
+                    "generates data with SAS code.",
         system=prompts.DATA_ENGINEER,
-        toolsets=[(viya, _DISCOVERY + ["execute_sas_code", "upload_data",
-                                       "upload_inline_data", "upload_file",
-                                       "promote_table_to_memory",
-                                       "list_source_tables"])],
-        max_iters=10),
-    "model_builder": AgentDef(
-        id="model_builder", name="Model Builder",
-        description="Builds and evaluates models with AutoML; sets up real-time scoring.",
-        system=prompts.MODEL_BUILDER,
+        toolsets=[(viya, ["upload_data", "upload_inline_data", "upload_file",
+                          "download_file", "list_files",
+                          "promote_table_to_memory", "list_source_tables",
+                          "execute_sas_code"] + _CAS_GROUNDING)],
+        max_iters=12),
+    "report_designer": AgentDef(
+        id="report_designer", name="Report Designer",
+        description="Owns Reports & Visualization (Tier 3): finds, reads, creates, "
+                    "edits, copies, and exports SAS Visual Analytics reports.",
+        system=prompts.REPORT_DESIGNER,
+        toolsets=[(viya, ["list_reports", "get_report", "get_report_outline",
+                          "describe_report_objects", "create_report",
+                          "copy_report", "apply_report_operations",
+                          "export_report", "delete_report",
+                          "list_castables", "get_castable_columns",
+                          "get_castable_data"])],
+        max_iters=12),
+    "ml_builder": AgentDef(
+        id="ml_builder", name="ML Builder",
+        description="Owns Automated Machine Learning (Tier 5): AutoML projects end to "
+                    "end — create, run, monitor, and register/publish the champion model.",
+        system=prompts.ML_BUILDER,
         toolsets=[(viya, ["list_ml_projects", "create_ml_project", "run_ml_project",
                           "register_ml_champion_model", "publish_ml_champion_model",
-                          "list_registered_models", "list_publishing_destinations",
-                          "list_mas_modules", "get_mas_module_step_signature",
-                          "score_data", "execute_sas_code", "list_castables",
-                          "get_castable_info", "get_castable_columns",
-                          "promote_table_to_memory"])],
-        max_iters=10),
-    "insights_reporter": AgentDef(
-        id="insights_reporter", name="Insights & Reporting",
-        description="Turns tables into KPIs, charts, and an executive narrative.",
-        system=prompts.INSIGHTS_REPORTER,
-        toolsets=[(viya, _DISCOVERY + ["execute_sas_code",
-                                       "catalog_download_table_profile"]),
-                  (charts, None)],
-        max_iters=10),
-    "platform_guide": AgentDef(
-        id="platform_guide", name="Platform Guide",
-        description="Answers how-to questions from the official SAS documentation, with sources.",
-        system=prompts.PLATFORM_GUIDE,
-        toolsets=[(sasdocs, None)],
-        max_iters=8),
-    "dashboard_designer": AgentDef(
-        id="dashboard_designer", name="Dashboard Designer",
-        description="Finds, renders, analyzes, and creates Visual Analytics dashboards; recommends KPIs and layout improvements.",
-        system=prompts.DASHBOARD_DESIGNER,
-        toolsets=[(va, None),
-                  (viya, ["list_castables", "get_castable_columns",
-                          "get_castable_data", "execute_sas_code"])],
+                          "list_publishing_destinations", "promote_table_to_memory",
+                          "list_castables", "get_castable_info",
+                          "get_castable_columns", "execute_sas_code"])],
         max_iters=12),
+    "model_ops": AgentDef(
+        id="model_ops", name="Model Ops",
+        description="Owns Model Management & Scoring (Tier 6): the model repository, "
+                    "publishing destinations, MAS modules, and real-time scoring.",
+        system=prompts.MODEL_OPS,
+        toolsets=[(viya, ["list_registered_models", "list_publishing_destinations",
+                          "list_mas_modules", "get_mas_module_step_signature",
+                          "score_data", "list_ml_projects",
+                          "register_ml_champion_model",
+                          "publish_ml_champion_model"])],
+        max_iters=12),
+    "decision_architect": AgentDef(
+        id="decision_architect", name="Decision Architect",
+        description="Owns SAS Intelligent Decisioning (Tier 7): business rule sets and "
+                    "rules, decision flows, revision locking, publishing to MAS, and "
+                    "live decision testing.",
+        system=prompts.DECISION_ARCHITECT,
+        toolsets=[(viya, ["list_business_rulesets", "create_business_ruleset",
+                          "get_business_ruleset", "update_business_ruleset",
+                          "delete_business_ruleset",
+                          "lock_business_ruleset_revision",
+                          "list_business_ruleset_revisions",
+                          "create_business_rule", "update_business_rule",
+                          "get_business_rule", "list_business_rules",
+                          "delete_business_rule",
+                          "create_decision_flow", "update_decision_flow",
+                          "get_decision_flow", "list_decision_flows",
+                          "delete_decision_flow", "get_decision_flow_code",
+                          "lock_decision_flow_revision",
+                          "list_decision_flow_revisions",
+                          "get_decision_flow_revision", "publish_decision_flow",
+                          "list_mas_modules", "get_mas_module_step_signature",
+                          "score_data"])],
+        max_iters=14),
 }
 
+# The copilot's own hands: fast lookups and one-shot answers across every
+# tier, so simple questions never need a delegation round-trip. Heavy,
+# multi-step work goes to the specialist that owns the tier.
+_COPILOT_CORE = ["catalog_search", "list_cas_servers", "list_caslibs",
+                 "list_castables", "get_castable_info", "get_castable_columns",
+                 "get_castable_data", "execute_sas_code", "list_files",
+                 "list_jobs", "list_reports", "list_ml_projects",
+                 "list_registered_models", "list_publishing_destinations",
+                 "list_mas_modules", "get_mas_module_step_signature",
+                 "score_data", "list_decision_flows", "list_business_rulesets"]
 
-# ── The four public agents ──────────────────────────────────────────
+
+# ── The public agents ───────────────────────────────────────────────
 
 AGENTS: dict[str, AgentDef] = {
     "sas-copilot": AgentDef(
         id="sas-copilot",
         name="SAS Viya Copilot",
-        description="Your copilot for the SAS Viya platform — explore data, run SAS, "
-                    "build models with AutoML, and score in real time, with a team "
-                    "of specialist agents.",
+        description="The complete SAS Viya platform in one copilot — the official "
+                    "SAS Viya MCP Server (74 tools across 9 tiers) driven by a "
+                    "specialist agent team: code, discovery, data ops, reports, "
+                    "AutoML, model ops, and intelligent decisioning.",
         system=prompts.SAS_COPILOT,
-        toolsets=[(viya, None), (va, None), (charts, None)],
+        toolsets=[(viya, _COPILOT_CORE)],
         specialists=SPECIALISTS,
-        max_iters=16,
+        max_iters=18,
         suggestions={
             "en": [
                 "What data do we have? Give me a quick tour of the environment.",
-                "Generate a 5,000-row synthetic dataset for a supplier-risk demo, then profile it.",
-                "Build a model with AutoML on that table and score one record in real time.",
-                "Show me the procurement dashboard and analyze it.",
+                "Profile the most interesting table end to end and tell me what needs attention.",
+                "Build a model with AutoML, publish the champion, and score one record in real time.",
+                "Create a supplier-risk rule set and decision flow, publish it, and test a decision.",
             ],
             "ar": [
                 "ما البيانات المتوفرة لدينا؟ قدّم لي جولة سريعة في البيئة.",
-                "أنشئ بيانات اصطناعية من 5000 صف لعرض مخاطر الموردين ثم حلّلها.",
-                "ابنِ نموذجاً بالتعلّم الآلي على ذلك الجدول واحسب درجة سجل واحد فورياً.",
-                "اعرض لوحة معلومات المشتريات وحلّلها.",
+                "حلّل أهم جدول من البداية إلى النهاية وأخبرني بما يستحق الانتباه.",
+                "ابنِ نموذجاً بالتعلّم الآلي وانشر النموذج البطل واحسب درجة سجل واحد فورياً.",
+                "أنشئ مجموعة قواعد وتدفق قرار لمخاطر الموردين وانشره واختبر قراراً.",
             ],
         }),
     "vi-investigator": AgentDef(

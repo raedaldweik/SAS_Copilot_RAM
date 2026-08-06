@@ -18,7 +18,7 @@ Server** (`sas-mcp-server` v1.7.0, vendored verbatim under
 
 | Agent | What it does | Backed by |
 |---|---|---|
-| **SAS Viya Copilot** | Explore the environment, query data, run SAS code, generate data, build models with AutoML, real-time scoring — orchestrating five specialist sub-agents (data steward, data engineer, model builder, insights & reporting, platform guide) | SAS Viya environment via the **official SAS Viya MCP Server** (`backend/sas_mcp_server/`, bridged by `backend/sasviya/`) |
+| **SAS Viya Copilot** | The complete platform: explore & profile data, run SAS code and batch jobs, build/edit VA reports, AutoML end to end, model ops & real-time scoring, and Intelligent Decisioning (rules → flows → publish → live decisions) — orchestrating seven tier-aligned specialists (SAS programmer, data explorer, data engineer, report designer, ML builder, model ops, decision architect) | The **official SAS Viya MCP Server**, all 74 tools / 9 tiers (`backend/sas_mcp_server/`, bridged by `backend/sasviya/`) |
 | **Investigation Assistant** | Alert triage for SAS Visual Investigator: work the queue, explain why alerts fired, gather entity networks, flag false positives, recommend actions | VI environment via `backend/sasvi/` (svi-alert + svi-datahub REST) |
 | **Procurement Integrity Analyst** | A per-use-case agent: tenders, bids, suppliers, invoices & red-flag alerts for government entities, with ready models (supplier risk, bid-rigging screen, price anomaly) | Bundled synthetic dataset + models (`backend/usecase/`) — runs with zero external dependencies |
 | **Global Intelligence** | What other countries/agencies are doing, emerging tech, news monitoring with cited sources | Tavily web search (`backend/websearch/`, vendored from `Web_Search`) |
@@ -33,47 +33,19 @@ to Arabic (RTL layout, Arabic labels, Arabic voice input) and tells the
 agents to answer in Modern Standard Arabic — and back again. The choice is
 remembered per browser.
 
-## Dashboards (SAS Visual Analytics)
+## Reports (SAS Visual Analytics)
 
-The SAS Viya Copilot (and its `dashboard_designer` specialist) speaks the VA
-REST APIs — the OpenAPI specs are vendored in [`docs/va-api/`](docs/va-api/)
-with an endpoint inventory in
-[`docs/va-api/ENDPOINTS.md`](docs/va-api/ENDPOINTS.md).
+The SAS Viya Copilot's `report_designer` specialist works VA reports
+through the official MCP Server's Reports tier (Tier 3): find and read
+reports (`list_reports`, `get_report_outline`, `describe_report_objects`),
+create and edit them (`create_report`, `copy_report`,
+`apply_report_operations`), and export shareable files (`export_report`).
+It grounds every report in real CAS table columns before binding visuals,
+and closes readouts with BI-consultant recommendations.
 
-**Show & analyze** — *"Show me the procurement dashboard and analyze it"*:
-the agent finds the report (`list_va_reports`), renders a live snapshot
-server-side (`render_report` → SVG/PNG, displayed as a card in the chat with
-zoom + an "Open in SAS Visual Analytics" link), then reads the data behind
-the key objects (`get_report_object_data`) and analyzes the actual numbers.
-`export_report_pdf` produces a downloadable PDF.
-
-**Create from a template** — `create_report_from_template` copies a styled
-template report and re-binds its visuals to a real CAS table via the
-report-transforms data-mapping API, saves it as a new report, renders the
-result in chat, and recommends enhancements (KPIs to add, better chart
-choices).
-
-### Building the template (one-time, in VA)
-
-The data-mapping transform swaps one data source for another, so the
-template's objects must be **bound to a placeholder table** (not truly
-empty). Recommended recipe:
-
-1. Load a tiny placeholder table, e.g. `Public.DASH_TEMPLATE_DATA` with
-   generic columns: `CATEGORY` (char), `SUBCATEGORY` (char), `DATE_VAL`
-   (date), `MEASURE1`–`MEASURE4` (numeric). A few dummy rows are enough.
-   (You can ask the copilot's data engineer to generate it.)
-2. In VA, build your styled dashboard on that table — background design,
-   SAS branding, and ~4 objects, e.g. a KPI (`MEASURE1`), bar
-   (`CATEGORY` × `MEASURE1`), line (`DATE_VAL` × `MEASURE2`), donut
-   (`SUBCATEGORY` × `MEASURE3`).
-3. Save it as e.g. **"SAS Dashboard Template"** in `/Public`.
-
-Then in chat: *"Create a procurement dashboard from the template using
-Public.PROC_KPIS — map CATEGORY to entity, MEASURE1 to award_value…"* — the
-agent checks the columns, proposes the mapping, creates the report, and
-shows it. Chart types come from the template; the agent picks the data,
-titles, and tells you what to add next.
+(The previous in-chat VA snapshot toolset still lives in `backend/sasva/`
+but is not wired to any agent — the copilot uses only the official MCP
+tools.)
 
 ## Architecture
 
@@ -84,7 +56,7 @@ backend/   FastAPI
   ├─ services/    the agentic loop (runner.py) + in-memory sessions (store.py)
   ├─ sas_mcp_server/  the official SAS Viya MCP Server, vendored verbatim (Apache-2.0)
   ├─ sasviya/     bridge: official MCP tools → agent runner (in-memory MCP client)
-  ├─ sasva/       Visual Analytics dashboard toolset (in-chat report snapshots)
+  ├─ sasva/       legacy VA snapshot toolset (kept in-tree, not wired to any agent)
   ├─ sasvi/       SAS Visual Investigator toolset (implements the SAS_VI_MCP roadmap)
   ├─ websearch/   Tavily tools      — vendored from Web_Search
   ├─ usecase/     bundled procurement-integrity data + models
@@ -97,10 +69,14 @@ backend/   FastAPI
   registered on an in-process FastMCP instance and called through a real
   in-memory MCP client session — actual MCP tools, schemas, and error
   semantics, with the whole app still shipping as **one container**.
-  `MCP_TIERS` selects which official tool tiers the copilot gets
-  (default `0-2,4-6`: compute, discovery, data ops, jobs, AutoML, scoring).
-  Pointing the bridge at an external MCP server (e.g. under RAM) is a
-  wiring change, not a rewrite.
+  Default is the **complete surface: all 74 tools, tiers 0–7** (`MCP_TIERS`
+  overrides; tier 8 is the Workbench-only variant of `execute_sas_code`).
+  Because 74 tools is a lot for one context, the copilot is **multi-agent**:
+  it keeps a compact core of cross-tier lookup tools for instant answers
+  and delegates deep work to seven specialists, each owning one platform
+  area (tiers 0+4 code & jobs, 1 discovery, 2 data ops, 3 reports,
+  5 AutoML, 6 model ops, 7 decisioning). Pointing the bridge at an external
+  MCP server (e.g. under RAM) is a wiring change, not a rewrite.
 * Queries run async: `POST /api/query` → poll `GET /api/query/{id}` with the
   live trace at `GET /api/query/{id}/trace` (this avoids gateway timeouts on
   long agent runs — same pattern as the RAM UI).
@@ -155,10 +131,11 @@ npm run dev            # http://localhost:5173, proxies /api to :8000
 
 * **SAS Viya Copilot** — "Brainstorm a driver-risk dataset for a demo,
   generate 5,000 rows, profile it, then build a model with AutoML and score
-  one record." Watch the copilot delegate to the data engineer → data steward
-  → model builder in the trace.
-* **Copilot / platform guide** — "How do I publish a model to MAS in Viya?"
-  → answer with citations from documentation.sas.com.
+  one record." Watch the copilot delegate to the data engineer → data
+  explorer → ML builder → model ops in the trace.
+* **Copilot / decisioning** — "Create a supplier-risk rule set and decision
+  flow, publish it to MAS, and test a decision live" — the full Intelligent
+  Decisioning lifecycle from chat.
 * **Investigation Assistant** — "What should I look at first today?" →
   prioritized alert triage; "Why did this alert fire, and is it a false
   positive?"

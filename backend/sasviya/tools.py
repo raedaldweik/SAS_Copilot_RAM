@@ -8,11 +8,12 @@ client session: the same tools, schemas, and behaviors an external MCP
 client would see, shipped inside this one container.
 
 Tier selection follows the official ``MCP_TIERS`` convention (spec strings
-like ``"0-4"`` or ``"0,1,7"``). The default here skips Tier 3 (Reports) —
-the chatbot's own `sasva` toolset owns the Visual Analytics experience,
-with in-chat snapshot rendering the MCP tier doesn't do — Tier 7
-(Decisioning authoring), and Tier 8 (Workbench, which re-registers
-``execute_sas_code``).
+like ``"0-4"`` or ``"0,1,7"``). The default is ``0-7`` — the complete
+74-tool surface: compute, discovery, data ops, reports, jobs, AutoML,
+model scoring, and Intelligent Decisioning. Tier 8 (Workbench) is an
+alternate deployment mode that re-registers ``execute_sas_code`` for SAS
+Viya Workbench, so it cannot coexist with Tier 0 — set ``MCP_TIERS=8``
+for a Workbench deployment.
 
 Auth is the SASLogon refresh-token grant (`saslogon.SASLogonAuth`), handed
 to the server through its ``get_token`` hook — no browser flow or
@@ -44,7 +45,7 @@ auth = SASLogonAuth(
     label="SAS Viya",
 )
 
-MCP_TIERS = os.getenv("MCP_TIERS", "").strip() or "0-2,4-6"
+MCP_TIERS = os.getenv("MCP_TIERS", "").strip() or "0-7"
 
 # The official package validates VIYA_ENDPOINT at import. Give it a
 # placeholder when none is set so the app can boot and publish tool specs;
