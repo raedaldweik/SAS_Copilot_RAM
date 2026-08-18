@@ -119,3 +119,9 @@ class SASLogonAuth:
             if body.get("refresh_token"):
                 self._cache["refresh_token"] = body["refresh_token"]
             return self._cache["token"]
+
+    def invalidate(self) -> None:
+        """Drop the cached access token so the next call re-authenticates
+        (e.g. after the server rejects it with a 401 mid-session)."""
+        self._cache["token"] = ""
+        self._cache["expires_at"] = 0.0
