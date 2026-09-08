@@ -6,6 +6,7 @@ SAS Retrieval Agent Manager.
 """
 from __future__ import annotations
 
+import asyncio
 import io
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -157,10 +158,18 @@ async def query(body: QueryRequest):
 
 
 @router.get("/query/{query_id}")
-async def query_status(query_id: str):
+async def query_status(query_id: str, wait: float = 0):
+    """Query status. Pass ?wait=<seconds> (capped at 30) to long-poll: the
+    response returns as soon as the agent finishes instead of making the
+    client sleep between fixed-interval checks."""
     q = store.get_query(query_id)
     if not q:
         raise HTTPException(status_code=404, detail="Unknown query.")
+    if q.status == "running" and wait > 0:
+        try:
+            await asyncio.wait_for(q.done_event.wait(), timeout=min(wait, 30.0))
+        except asyncio.TimeoutError:
+            pass
     if q.status == "running":
         return {"done": False, "status": q.status}
     return {"done": True, "result": q.result}

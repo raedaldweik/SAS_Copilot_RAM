@@ -105,30 +105,37 @@ export default function ChatPage() {
 
       let res = sub.result;
       if (!res) {
-        // Poll for the result; in parallel, surface the tool/LLM/retrieval
-        // calls the agent has recorded so far as live activity under the indicator.
-        const interval = Math.max((sub.pollInterval || 2) * 1000, 1000);
+        // Long-poll for the result — the server answers the moment the agent
+        // finishes, so there's no dead time between "done" and it appearing.
+        // A separate fast timer refreshes the live tool/LLM activity trace
+        // shown under the typing indicator while we wait.
         const deadline = Date.now() + (sub.timeout || 600) * 1000;
-        let consecutiveErrors = 0;
-        for (;;) {
-          await sleep(interval);
+        const traceTimer = setInterval(() => {
           getQueryTrace(sub.queryId).then(setLiveTrace).catch(() => {});
-          let st;
-          try {
-            st = await getQueryStatus(sub.queryId);
-            consecutiveErrors = 0;
-          } catch (e) {
-            // A single failed poll (e.g. a brief backend/gateway drop under load)
-            // shouldn't kill the turn — the query is still running on the
-            // server. Keep polling; give up only after several in a row.
-            if (++consecutiveErrors >= 5) throw e;
+        }, 1200);
+        try {
+          let consecutiveErrors = 0;
+          for (;;) {
+            let st;
+            try {
+              st = await getQueryStatus(sub.queryId, 25);
+              consecutiveErrors = 0;
+            } catch (e) {
+              // A single failed poll (e.g. a brief backend/gateway drop under load)
+              // shouldn't kill the turn — the query is still running on the
+              // server. Keep polling; give up only after several in a row.
+              if (++consecutiveErrors >= 5) throw e;
+              if (Date.now() >= deadline)
+                throw new Error(t('agentTimeout', { n: sub.timeout || 600 }));
+              await sleep(1000);
+              continue;
+            }
+            if (st.done) { res = st.result; break; }
             if (Date.now() >= deadline)
               throw new Error(t('agentTimeout', { n: sub.timeout || 600 }));
-            continue;
           }
-          if (st.done) { res = st.result; break; }
-          if (Date.now() >= deadline)
-            throw new Error(t('agentTimeout', { n: sub.timeout || 600 }));
+        } finally {
+          clearInterval(traceTimer);
         }
       }
 

@@ -8,6 +8,7 @@ network and workflow; write tools are gated behind VI_ALLOW_ACTIONS.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any, Optional
 
@@ -41,6 +42,23 @@ _WF_HEADERS = {"VI-Client-Application": "desktop"}
 
 
 # ── request plumbing ────────────────────────────────────────────────
+
+# One shared connection pool for all VI calls: keep-alive reuses the TCP+TLS
+# session instead of paying a full handshake per tool call (which adds up
+# fast when VI sits behind a cloudflared tunnel).
+_http: Optional[httpx.AsyncClient] = None
+
+
+def _get_http() -> httpx.AsyncClient:
+    global _http
+    if _http is None or _http.is_closed:
+        _http = httpx.AsyncClient(
+            verify=config.VI_SSL_VERIFY,
+            timeout=config.VI_TIMEOUT,
+            follow_redirects=True,
+            limits=httpx.Limits(max_keepalive_connections=10,
+                                keepalive_expiry=60.0))
+    return _http
 
 
 def _service_url(service: str, path: str) -> str:
@@ -133,28 +151,26 @@ async def vi_request(
     if headers:
         req_headers.update(headers)
 
-    async with httpx.AsyncClient(verify=config.VI_SSL_VERIFY,
-                                 timeout=config.VI_TIMEOUT,
-                                 follow_redirects=True) as client:
-        try:
+    client = _get_http()
+    try:
+        resp = await client.request(
+            method, url, params=params or None,
+            json=body if body is not None else None,
+            headers=req_headers)
+        if resp.status_code == 401:
+            # Token may have been revoked server-side — refresh once.
+            auth.invalidate()
+            token = await auth.get_token()
+            req_headers["Authorization"] = f"Bearer {token}"
             resp = await client.request(
                 method, url, params=params or None,
                 json=body if body is not None else None,
                 headers=req_headers)
-            if resp.status_code == 401:
-                # Token may have been revoked server-side — refresh once.
-                auth.invalidate()
-                token = await auth.get_token()
-                req_headers["Authorization"] = f"Bearer {token}"
-                resp = await client.request(
-                    method, url, params=params or None,
-                    json=body if body is not None else None,
-                    headers=req_headers)
-        except httpx.HTTPError as e:
-            raise ToolError(
-                f"Could not reach {url}: {e}. If VI is behind a cloudflared "
-                "quick tunnel, the tunnel may have restarted with a new "
-                "URL — update VI_ENDPOINT to the current tunnel address.") from e
+    except httpx.HTTPError as e:
+        raise ToolError(
+            f"Could not reach {url}: {e}. If VI is behind a cloudflared "
+            "quick tunnel, the tunnel may have restarted with a new "
+            "URL — update VI_ENDPOINT to the current tunnel address.") from e
 
     if resp.status_code >= 400:
         detail = _error_detail(resp)
@@ -367,8 +383,9 @@ def _shape_process(p: dict) -> dict:
     "get_investigation_scope",
     "Describe this assistant's investigation scope: what the connected SAS "
     "Visual Investigator environment contains, which capabilities are "
-    "available, and whether write actions are enabled. Call this first in a "
-    "new conversation.",
+    "available, and whether write actions are enabled. The same summary is "
+    "already in your system prompt — only call this when the user explicitly "
+    "asks about scope/capabilities.",
     {"type": "object", "properties": {}},
 )
 async def get_investigation_scope():
@@ -414,15 +431,16 @@ async def check_vi_connection():
                 "fix": "Set VI_ENDPOINT in the deployment's environment "
                        "variables (the VI base URL or the current "
                        "cloudflared tunnel URL)."}
-    checks = {}
-    overall = True
-    for service, path in (("alert", "/"), ("sand", "/")):
+    async def probe(service: str, path: str) -> tuple[str, str]:
         try:
             await vi_request("GET", service, path)
-            checks[service] = "ok"
+            return service, "ok"
         except Exception as e:
-            checks[service] = str(e)[:200]
-            overall = False
+            return service, str(e)[:200]
+
+    checks = dict(await asyncio.gather(probe("alert", "/"),
+                                       probe("sand", "/")))
+    overall = all(v == "ok" for v in checks.values())
     return {"ok": overall, "endpoint": config.VI_ENDPOINT,
             "services": checks,
             "writeActionsEnabled": config.VI_ALLOW_ACTIONS}

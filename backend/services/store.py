@@ -7,6 +7,7 @@ swap for Redis/Postgres when multi-replica persistence matters.
 """
 from __future__ import annotations
 
+import asyncio
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -32,6 +33,9 @@ class QueryRun:
     trace: dict = field(default_factory=lambda: {
         "toolCalls": [], "llmCalls": [], "retrievalCalls": []})
     created_at: float = field(default_factory=time.time)
+    # Set by the runner when the query finishes — lets the status endpoint
+    # long-poll instead of making the frontend sleep between checks.
+    done_event: asyncio.Event = field(default_factory=asyncio.Event)
 
 
 @dataclass

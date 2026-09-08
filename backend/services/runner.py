@@ -141,6 +141,27 @@ class AgentRunner:
         })
 
     # ── LLM call ────────────────────────────────────────────────────
+    @staticmethod
+    def _cache_marked(messages: list) -> list:
+        """Copy of `messages` with a cache breakpoint on the final block of
+        the last message. The loop's last message is always a user message we
+        built (the query, or a tool_result batch), so each iteration's whole
+        prefix — prior turns and tool results included — becomes a cache read
+        instead of a full re-process."""
+        if not messages or not isinstance(messages[-1], dict):
+            return messages
+        last = messages[-1]
+        content = last.get("content")
+        marker = {"cache_control": {"type": "ephemeral"}}
+        if isinstance(content, str):
+            blocks = [{"type": "text", "text": content, **marker}]
+        elif isinstance(content, list) and content \
+                and isinstance(content[-1], dict):
+            blocks = content[:-1] + [{**content[-1], **marker}]
+        else:
+            return messages
+        return messages[:-1] + [{**last, "content": blocks}]
+
     async def _call_llm(self, system: str, tools: list[dict], messages: list) -> Any:
         client = get_client()
         system_blocks = [{"type": "text", "text": system,
@@ -153,7 +174,7 @@ class AgentRunner:
             max_tokens=MAX_TOKENS,
             system=system_blocks,
             tools=tools,
-            messages=messages,
+            messages=self._cache_marked(messages),
             output_config={"effort": LLM_EFFORT},
         ) as stream:
             msg = await stream.get_final_message()
@@ -209,12 +230,20 @@ class AgentRunner:
                 break
 
             messages.append({"role": "assistant", "content": msg.content})
-            results = []
-            for tu in tool_uses:
+
+            # Run the batch concurrently — the model deliberately groups
+            # independent lookups into one turn, so serializing them here
+            # would just stack their network latencies.
+            async def run_one(tu):
                 args = tu.input or {}
                 output, is_error = await self._execute_tool(
                     agent, tu.name, args, agent_label)
                 self._record_tool(tu.name, args, output, agent_label)
+                return output, is_error
+
+            outcomes = await asyncio.gather(*(run_one(tu) for tu in tool_uses))
+            results = []
+            for tu, (output, is_error) in zip(tool_uses, outcomes):
                 content = json.dumps(output, default=str)
                 if len(content) > _TOOL_RESULT_CAP:
                     content = content[:_TOOL_RESULT_CAP] + '… [truncated]"'
@@ -267,6 +296,8 @@ class AgentRunner:
             run.result = {"queryId": run.id, "errorCode": 1,
                           "errorText": f"{type(e).__name__}: {str(e)[:500]}"}
             run.status = "error"
+        finally:
+            run.done_event.set()   # release any long-polling status request
 
 
 def _extract_context(tool_calls: list[dict]) -> list[dict]:

@@ -49,7 +49,10 @@ export const submitQuery = (content, target, querySessionId = null, attachments 
     }),
   });
 
-export const getQueryStatus = (queryId) => req(`/api/query/${encodeURIComponent(queryId)}`);
+// wait > 0 long-polls: the server holds the request (up to `wait` seconds,
+// capped server-side) and answers the moment the agent finishes.
+export const getQueryStatus = (queryId, wait = 0) =>
+  req(`/api/query/${encodeURIComponent(queryId)}${wait ? `?wait=${wait}` : ''}`);
 
 // Tool/LLM calls the agent recorded for a query — also works mid-run
 export const getQueryTrace = (queryId) => req(`/api/query/${encodeURIComponent(queryId)}/trace`);
